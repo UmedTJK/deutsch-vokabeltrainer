@@ -65,6 +65,12 @@ const presentationExitBtn = document.getElementById("presentationExitBtn");
 const presentationPauseBtn = document.getElementById("presentationPauseBtn");
 const presentationStopBtn = document.getElementById("presentationStopBtn");
 
+// Элементы аудио
+const speakCardBtn = document.getElementById("speakCardBtn");
+const speakPresentationBtn = document.getElementById("speakPresentationBtn");
+const speakTestBtn = document.getElementById("speakTestBtn");
+const toggleSoundBtn = document.getElementById("toggleSoundBtn");
+
 const STORAGE_KEY = "germanTrainerProgress";
 
 let words = [];
@@ -88,9 +94,14 @@ let presentationModeActive = false;
 let presentationWordsList = [];
 let presentationCurrentIndex = 0;
 let presentationTimer = null;
-let presentationInterval = 11000; // 11 секунд (8 + 3)
+let presentationInterval = 11000;
 let presentationPaused = false;
 let presentationAnimationFrame = null;
+
+// Переменные для аудио
+let soundEnabled = true;
+let speechSynthesis = window.speechSynthesis;
+let currentUtterance = null;
 
 function shuffleArray(array) {
   const newArray = [...array];
@@ -332,6 +343,76 @@ function hideTypingFeedback() {
   typingInput.value = "";
 }
 
+/* АУДИО ФУНКЦИИ */
+function speakText(text, lang = 'de-DE') {
+  if (!soundEnabled) return;
+  
+  if (currentUtterance) {
+    speechSynthesis.cancel();
+  }
+  
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang;
+  utterance.rate = 0.9;
+  utterance.pitch = 1.0;
+  
+  currentUtterance = utterance;
+  speechSynthesis.speak(utterance);
+  
+  utterance.onend = () => {
+    currentUtterance = null;
+  };
+}
+
+function getCurrentWordForSpeaking() {
+  const source = isFilteredMode ? filteredWords : words;
+  if (!source.length) return null;
+  
+  const w = source[currentCardIndex];
+  
+  if (cardMode === "de-to-ru") {
+    return { text: w.word, lang: 'de-DE' };
+  } else {
+    return { text: w.translation, lang: 'ru-RU' };
+  }
+}
+
+function speakCardWord() {
+  const word = getCurrentWordForSpeaking();
+  if (word) {
+    speakText(word.text, word.lang);
+  }
+}
+
+function speakPresentationWord() {
+  if (presentationModeActive && presentationCurrentIndex < presentationWordsList.length) {
+    const w = presentationWordsList[presentationCurrentIndex];
+    speakText(w.word, 'de-DE');
+  }
+}
+
+function speakTestWord() {
+  if (testQuestions.length && currentTestIndex < testQuestions.length) {
+    const q = testQuestions[currentTestIndex];
+    speakText(q.word, 'de-DE');
+  }
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  if (soundEnabled) {
+    toggleSoundBtn.textContent = "🔊 Звук вкл";
+    toggleSoundBtn.classList.remove("sound-off");
+  } else {
+    toggleSoundBtn.textContent = "🔇 Звук выкл";
+    toggleSoundBtn.classList.add("sound-off");
+    if (currentUtterance) {
+      speechSynthesis.cancel();
+      currentUtterance = null;
+    }
+  }
+}
+
 /* РЕЖИМ ПРЕЗЕНТАЦИИ */
 function startPresentationMode() {
   if (!words.length) {
@@ -366,18 +447,21 @@ function showPresentationSlide() {
   
   presentationCounter.textContent = `${presentationCurrentIndex + 1} / ${presentationWordsList.length}`;
   
-  // Скрываем перевод и примеры (плавно)
   presentationTranslation.style.opacity = "0";
   presentationExamples.style.opacity = "0";
   
-  // Показываем слово
   presentationWord.textContent = word.word;
   presentationWord.style.opacity = "1";
   
-  // Запускаем прогресс-бар
   startProgressBar();
   
-  // Показываем перевод через 1000ms
+  // Автоматическое озвучивание в презентации
+  setTimeout(() => {
+    if (presentationModeActive && !presentationPaused) {
+      speakText(word.word, 'de-DE');
+    }
+  }, 500);
+  
   setTimeout(() => {
     if (presentationModeActive && !presentationPaused && presentationCurrentIndex < presentationWordsList.length) {
       presentationTranslation.textContent = word.translation;
@@ -385,7 +469,6 @@ function showPresentationSlide() {
     }
   }, 1000);
   
-  // Показываем примеры через 2000ms
   setTimeout(() => {
     if (presentationModeActive && !presentationPaused && presentationCurrentIndex < presentationWordsList.length) {
       presentationExampleDe.textContent = word.example_de;
@@ -394,10 +477,8 @@ function showPresentationSlide() {
     }
   }, 2000);
   
-  // Очищаем предыдущий таймер
   if (presentationTimer) clearTimeout(presentationTimer);
   
-  // Устанавливаем таймер на следующее слово
   presentationTimer = setTimeout(() => {
     if (presentationModeActive && !presentationPaused) {
       presentationCurrentIndex++;
@@ -437,9 +518,7 @@ function pausePresentation() {
     if (presentationAnimationFrame) cancelAnimationFrame(presentationAnimationFrame);
   } else {
     presentationPauseBtn.textContent = "⏸ Пауза";
-    // Перезапускаем прогресс-бар с текущего момента
     startProgressBar();
-    // Перезапускаем таймер
     presentationTimer = setTimeout(() => {
       if (presentationModeActive && !presentationPaused) {
         presentationCurrentIndex++;
@@ -622,5 +701,11 @@ testModeBtn.onclick = switchToTest;
 
 nextQuestionBtn.onclick = nextTestQuestion;
 restartTestBtn.onclick = restartTest;
+
+// Аудио кнопки
+if (speakCardBtn) speakCardBtn.onclick = speakCardWord;
+if (speakPresentationBtn) speakPresentationBtn.onclick = speakPresentationWord;
+if (speakTestBtn) speakTestBtn.onclick = speakTestWord;
+if (toggleSoundBtn) toggleSoundBtn.onclick = toggleSound;
 
 loadWords();

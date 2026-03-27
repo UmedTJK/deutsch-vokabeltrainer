@@ -161,6 +161,51 @@
       border-color: #4a90e2;
     }
 
+    /* Стили для кнопок озвучивания */
+    .word-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .test-word-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .speak-btn {
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      padding: 5px 10px;
+      border-radius: 50%;
+      transition: all 0.2s;
+      opacity: 0.7;
+    }
+
+    .speak-btn:hover {
+      opacity: 1;
+      transform: scale(1.1);
+      background: rgba(0,0,0,0.05);
+    }
+
+    .sound-toggle-btn {
+      background: #6c757d;
+      color: white;
+      border: none;
+    }
+
+    .sound-toggle-btn.sound-off {
+      background: #dc3545;
+      opacity: 0.7;
+    }
+
     /* Стили для режима презентации */
     .presentation-panel {
       position: fixed;
@@ -239,18 +284,36 @@
       margin-bottom: 80px;
     }
 
-    /* Крупные шрифты для чтения с расстояния 1-2 метра */
+    .presentation-word-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 60px;
+    }
+
+    .presentation-speak-btn {
+      background: none;
+      border: none;
+      font-size: 48px;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: all 0.2s;
+      padding: 10px;
+    }
+
+    .presentation-speak-btn:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
     .presentation-word {
       font-size: 96px;
       font-weight: bold;
       color: #2c3e50;
-      margin-bottom: 60px;
       opacity: 1;
       transition: opacity 0.4s ease;
-      min-height: 180px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       line-height: 1.2;
     }
 
@@ -320,20 +383,15 @@
       
       .presentation-word {
         font-size: 48px;
-        min-height: 100px;
-        margin-bottom: 40px;
       }
       
       .presentation-translation {
         font-size: 36px;
-        min-height: 80px;
-        margin-bottom: 40px;
       }
       
       .presentation-examples {
         font-size: 20px;
         padding: 25px;
-        min-height: 200px;
       }
       
       .example-label {
@@ -350,24 +408,12 @@
         bottom: 20px;
       }
       
-      .pause-btn {
-        left: 20px;
+      .presentation-word-container {
+        gap: 15px;
       }
       
-      .stop-btn {
-        right: 20px;
-      }
-      
-      .presentation-exit-btn {
-        top: 20px;
-        right: 20px;
-        padding: 8px 16px;
-        font-size: 14px;
-      }
-      
-      .presentation-counter {
-        font-size: 14px;
-        margin-bottom: 40px;
+      .presentation-speak-btn {
+        font-size: 32px;
       }
     }
   </style>
@@ -403,7 +449,10 @@
 
       <div id="cardsCounter" class="question-count"></div>
 
-      <div id="cardWord" class="word"></div>
+      <div class="word-container">
+        <div id="cardWord" class="word"></div>
+        <button id="speakCardBtn" class="speak-btn" title="Озвучить">🔊</button>
+      </div>
 
       <div id="cardAnswer" class="hidden">
         <div id="cardTranslation" class="translation"></div>
@@ -431,6 +480,7 @@
         <input id="searchInput" type="text" placeholder="Поиск..." />
         <button id="searchBtn">Найти</button>
         <button id="resetSearchBtn">Сброс</button>
+        <button id="toggleSoundBtn" class="sound-toggle-btn">🔊 Звук вкл</button>
       </div>
 
       <!-- ФИЛЬТРЫ -->
@@ -472,7 +522,11 @@
     <div id="testSection" class="panel hidden">
 
       <div id="testCounter" class="question-count"></div>
-      <div id="testWord" class="word"></div>
+
+      <div class="test-word-container">
+        <div id="testWord" class="word"></div>
+        <button id="speakTestBtn" class="speak-btn" title="Озвучить">🔊</button>
+      </div>
 
       <div id="answersContainer" class="answers"></div>
 
@@ -494,7 +548,12 @@
       
       <div class="presentation-content">
         <div id="presentationCounter" class="presentation-counter"></div>
-        <div id="presentationWord" class="presentation-word"></div>
+        
+        <div class="presentation-word-container">
+          <div id="presentationWord" class="presentation-word"></div>
+          <button id="speakPresentationBtn" class="presentation-speak-btn" title="Озвучить">🔊</button>
+        </div>
+        
         <div id="presentationTranslation" class="presentation-translation"></div>
         <div id="presentationExamples" class="presentation-examples">
           <p><span class="example-label">DE:</span> <span id="presentationExampleDe"></span></p>
