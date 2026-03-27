@@ -64,6 +64,10 @@ const presentationProgressBar = document.getElementById("presentationProgressBar
 const presentationExitBtn = document.getElementById("presentationExitBtn");
 const presentationPauseBtn = document.getElementById("presentationPauseBtn");
 const presentationStopBtn = document.getElementById("presentationStopBtn");
+const presentationSidebar = document.getElementById("presentationSidebar");
+const toggleSidebarBtn = document.getElementById("toggleSidebarBtn");
+const wordsListContainer = document.getElementById("wordsList");
+const presentationContent = document.getElementById("presentationContent");
 
 // Элементы аудио
 const speakCardBtn = document.getElementById("speakCardBtn");
@@ -413,6 +417,60 @@ function toggleSound() {
   }
 }
 
+/* БОКОВАЯ ПАНЕЛЬ ПРЕЗЕНТАЦИИ */
+function toggleSidebar() {
+  presentationSidebar.classList.toggle("collapsed");
+  const btn = toggleSidebarBtn;
+  if (presentationSidebar.classList.contains("collapsed")) {
+    btn.textContent = "▶";
+    btn.title = "Показать панель";
+    presentationContent.classList.remove("with-sidebar");
+  } else {
+    btn.textContent = "◀";
+    btn.title = "Скрыть панель";
+    presentationContent.classList.add("with-sidebar");
+  }
+}
+
+function updateWordsList() {
+  if (!wordsListContainer) return;
+  
+  wordsListContainer.innerHTML = "";
+  
+  presentationWordsList.forEach((word, index) => {
+    const wordItem = document.createElement("div");
+    wordItem.className = "word-item";
+    
+    if (index === presentationCurrentIndex) {
+      wordItem.classList.add("current");
+    } else if (index < presentationCurrentIndex) {
+      wordItem.classList.add("passed");
+    }
+    
+    wordItem.innerHTML = `
+      <span class="word-number">${index + 1}.</span>
+      <span class="word-text">${word.word}</span>
+    `;
+    
+    wordItem.onclick = () => {
+      if (presentationModeActive && !presentationPaused) {
+        presentationCurrentIndex = index;
+        if (presentationTimer) clearTimeout(presentationTimer);
+        if (presentationAnimationFrame) cancelAnimationFrame(presentationAnimationFrame);
+        showPresentationSlide();
+      }
+    };
+    
+    wordsListContainer.appendChild(wordItem);
+  });
+  
+  // Автоматически прокручиваем к текущему слову
+  const currentItem = wordsListContainer.querySelector(".word-item.current");
+  if (currentItem) {
+    currentItem.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
 /* РЕЖИМ ПРЕЗЕНТАЦИИ */
 function startPresentationMode() {
   if (!words.length) {
@@ -435,12 +493,17 @@ function startPresentationMode() {
   
   presentationPauseBtn.textContent = "⏸ Пауза";
   
+  // Показываем боковую панель и обновляем список
+  updateWordsList();
+  presentationContent.classList.add("with-sidebar");
+  
   showPresentationSlide();
 }
 
 function showPresentationSlide() {
   if (presentationCurrentIndex >= presentationWordsList.length) {
     presentationCurrentIndex = 0;
+    updateWordsList();
   }
   
   const word = presentationWordsList[presentationCurrentIndex];
@@ -453,9 +516,11 @@ function showPresentationSlide() {
   presentationWord.textContent = word.word;
   presentationWord.style.opacity = "1";
   
+  // Обновляем список слов с подсветкой текущего
+  updateWordsList();
+  
   startProgressBar();
   
-  // Автоматическое озвучивание в презентации
   setTimeout(() => {
     if (presentationModeActive && !presentationPaused) {
       speakText(word.word, 'de-DE');
@@ -695,6 +760,7 @@ presentationModeBtn.onclick = startPresentationMode;
 presentationExitBtn.onclick = exitPresentation;
 presentationPauseBtn.onclick = pausePresentation;
 presentationStopBtn.onclick = stopPresentation;
+toggleSidebarBtn.onclick = toggleSidebar;
 
 cardsModeBtn.onclick = switchToCards;
 testModeBtn.onclick = switchToTest;
