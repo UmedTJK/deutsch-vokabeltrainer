@@ -4,11 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>German B2 Beruf Trainer</title>
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f7fb;
+    * {
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f7fb;
       padding: 20px;
       color: #222;
     }
@@ -20,6 +26,7 @@
 
     h1 {
       margin-bottom: 10px;
+      font-size: 24px;
     }
 
     .panel {
@@ -35,18 +42,24 @@
       flex-wrap: wrap;
       gap: 10px;
       margin-bottom: 15px;
+      align-items: center;
     }
 
-    select, button {
+    select, button, input {
       padding: 10px 14px;
       border-radius: 8px;
       border: 1px solid #ccc;
       font-size: 16px;
+    }
+
+    button {
       cursor: pointer;
+      transition: all 0.2s;
     }
 
     button:hover {
-      opacity: 0.95;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .word {
@@ -58,7 +71,6 @@
     .translation, .examples {
       margin-top: 12px;
       font-size: 18px;
-      line-height: 1.5;
     }
 
     .hidden {
@@ -69,6 +81,7 @@
       display: flex;
       gap: 10px;
       margin-top: 20px;
+      flex-wrap: wrap;
     }
 
     .mode-buttons {
@@ -84,7 +97,7 @@
     }
 
     .question-count {
-      font-size: 15px;
+      font-size: 14px;
       color: #666;
       margin-bottom: 10px;
     }
@@ -93,11 +106,6 @@
       display: grid;
       gap: 10px;
       margin-top: 20px;
-    }
-
-    .answer-btn {
-      text-align: left;
-      background: white;
     }
 
     .answer-btn.correct {
@@ -110,22 +118,195 @@
       border-color: #dc3545;
     }
 
-    .result-box {
-      font-size: 20px;
-      font-weight: bold;
-      margin-top: 20px;
-    }
-
     .small-text {
-      color: #666;
       font-size: 14px;
-      margin-top: 10px;
+      color: #666;
     }
 
-    .message {
-      margin-top: 10px;
+    /* Стили для режима ввода */
+    .typing-area {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    #typingInput {
+      flex: 1;
+      padding: 12px;
       font-size: 16px;
-      font-weight: 600;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+    }
+
+    .typing-feedback {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #f0f0f0;
+    }
+
+    .typing-feedback.correct {
+      background: #d4edda;
+      border-left: 4px solid #28a745;
+    }
+
+    .typing-feedback.wrong {
+      background: #f8d7da;
+      border-left: 4px solid #dc3545;
+    }
+
+    .typing-btn.active {
+      background: #4a90e2;
+      color: white;
+      border-color: #4a90e2;
+    }
+
+    /* Стили для режима презентации */
+    .presentation-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #fffaf0;
+      border-radius: 0;
+      padding: 60px 40px;
+      margin: 0;
+      z-index: 1000;
+      overflow-y: auto;
+    }
+
+    .presentation-exit-btn {
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      background: rgba(0,0,0,0.1);
+      border: none;
+      font-size: 18px;
+      padding: 12px 24px;
+      border-radius: 40px;
+      cursor: pointer;
+      z-index: 1001;
+      transition: all 0.2s;
+    }
+
+    .presentation-exit-btn:hover {
+      background: rgba(0,0,0,0.2);
+      transform: scale(1.05);
+    }
+
+    .presentation-control-btn {
+      position: fixed;
+      bottom: 40px;
+      background: rgba(0,0,0,0.1);
+      border: none;
+      padding: 14px 28px;
+      font-size: 18px;
+      border-radius: 40px;
+      cursor: pointer;
+      z-index: 1001;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .presentation-control-btn:hover {
+      background: rgba(0,0,0,0.2);
+      transform: scale(1.05);
+    }
+
+    .pause-btn {
+      left: 40px;
+    }
+
+    .stop-btn {
+      right: 40px;
+    }
+
+    .presentation-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100%;
+      text-align: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .presentation-counter {
+      font-size: 18px;
+      color: #999;
+      margin-bottom: 80px;
+    }
+
+    /* Крупные шрифты для чтения с расстояния 1-2 метра */
+    .presentation-word {
+      font-size: 96px;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 60px;
+      opacity: 1;
+      transition: opacity 0.4s ease;
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.2;
+    }
+
+    .presentation-translation {
+      font-size: 72px;
+      color: #4a90e2;
+      margin-bottom: 60px;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      min-height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.2;
+    }
+
+    .presentation-examples {
+      font-size: 32px;
+      color: #666;
+      line-height: 1.5;
+      background: rgba(0,0,0,0.03);
+      padding: 40px;
+      border-radius: 24px;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .presentation-examples p {
+      margin: 20px 0;
+    }
+
+    .example-label {
+      font-weight: bold;
+      color: #4a90e2;
+      font-size: 36px;
+      margin-right: 15px;
+    }
+
+    .presentation-progress {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: rgba(0,0,0,0.1);
+    }
+
+    .presentation-progress-bar {
+      height: 100%;
+      background: #4a90e2;
+      width: 0%;
+      transition: width 0.1s linear;
     }
 
     @media (max-width: 600px) {
@@ -133,85 +314,197 @@
         font-size: 26px;
       }
 
-      select, button {
-        width: 100%;
-      }
-
-      .mode-buttons,
-      .nav-buttons,
-      .controls {
+      .controls, .nav-buttons, .mode-buttons {
         flex-direction: column;
+      }
+      
+      .presentation-word {
+        font-size: 48px;
+        min-height: 100px;
+        margin-bottom: 40px;
+      }
+      
+      .presentation-translation {
+        font-size: 36px;
+        min-height: 80px;
+        margin-bottom: 40px;
+      }
+      
+      .presentation-examples {
+        font-size: 20px;
+        padding: 25px;
+        min-height: 200px;
+      }
+      
+      .example-label {
+        font-size: 22px;
+      }
+      
+      .presentation-panel {
+        padding: 30px 20px;
+      }
+      
+      .presentation-control-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        bottom: 20px;
+      }
+      
+      .pause-btn {
+        left: 20px;
+      }
+      
+      .stop-btn {
+        right: 20px;
+      }
+      
+      .presentation-exit-btn {
+        top: 20px;
+        right: 20px;
+        padding: 8px 16px;
+        font-size: 14px;
+      }
+      
+      .presentation-counter {
+        font-size: 14px;
+        margin-bottom: 40px;
       }
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <h1>German B2 Beruf Trainer</h1>
-    <p class="small-text">Локальный тренажёр немецких слов</p>
+    <p class="small-text">Тренажёр слов (B2 Beruf)</p>
 
+    <!-- ЗАГРУЗКА -->
     <div class="panel">
       <div class="controls">
         <select id="daySelect">
           <option value="tag1">Tag 1</option>
           <option value="tag2">Tag 2</option>
+          <option value="tag3">Tag 3</option>
         </select>
-        <button id="loadBtn">Загрузить слова</button>
-        <button id="repeatUnknownBtn">Повторить сложные</button>
+
+        <button id="loadBtn">Загрузить</button>
+        <button id="repeatUnknownBtn">Сложные</button>
       </div>
 
       <div class="mode-buttons">
-        <button id="cardsModeBtn" class="active">Карточки</button>
-        <button id="testModeBtn">Мини-тест</button>
+        <button id="cardsModeBtn" class="active">📇 Карточки</button>
+        <button id="testModeBtn">📝 Тест</button>
+        <button id="presentationModeBtn">🎬 Режим презентации</button>
       </div>
     </div>
 
-    <!-- CARDS -->
+    <!-- КАРТОЧКИ -->
     <div id="cardsSection" class="panel">
-      <div class="question-count" id="cardsCounter">Слово 0 / 0</div>
-      <div class="word" id="cardWord">Сначала загрузите слова</div>
+
+      <div id="cardsCounter" class="question-count"></div>
+
+      <div id="cardWord" class="word"></div>
 
       <div id="cardAnswer" class="hidden">
-        <div class="translation" id="cardTranslation"></div>
+        <div id="cardTranslation" class="translation"></div>
+
         <div class="examples">
-          <p><strong>DE:</strong> <span id="cardExampleDe"></span></p>
-          <p><strong>RU:</strong> <span id="cardExampleRu"></span></p>
+          <p><b>DE:</b> <span id="cardExampleDe"></span></p>
+          <p><b>RU:</b> <span id="cardExampleRu"></span></p>
         </div>
       </div>
 
-      <!-- Навигация -->
+      <!-- РЕЖИМ ВВОДА -->
+      <div id="typingSection" class="hidden">
+        <div class="typing-area">
+          <input type="text" id="typingInput" placeholder="Введите перевод..." />
+          <button id="checkTypingBtn">Проверить</button>
+        </div>
+        <div id="typingFeedback" class="typing-feedback hidden">
+          <p id="typingMessage"></p>
+          <p id="typingCorrectAnswer"></p>
+        </div>
+      </div>
+
+      <!-- ПОИСК -->
+      <div class="controls">
+        <input id="searchInput" type="text" placeholder="Поиск..." />
+        <button id="searchBtn">Найти</button>
+        <button id="resetSearchBtn">Сброс</button>
+      </div>
+
+      <!-- ФИЛЬТРЫ -->
+      <div class="controls">
+        <button id="showAllBtn">Все</button>
+        <button id="randomWordBtn">Случайное</button>
+
+        <label>
+          <input id="autoNextCheckbox" type="checkbox" checked />
+          Автопереход
+        </label>
+      </div>
+
+      <!-- УПРАВЛЕНИЕ -->
       <div class="nav-buttons">
-        <button id="showAnswerBtn">Показать ответ</button>
+        <select id="cardModeSelect">
+          <option value="de-to-ru">DE → RU</option>
+          <option value="ru-to-de">RU → DE</option>
+        </select>
+
+        <button id="typingModeBtn" class="typing-btn">✏️ Режим ввода</button>
+
+        <button id="showAnswerBtn">Ответ</button>
         <button id="prevBtn">Назад</button>
         <button id="nextBtn">Вперёд</button>
       </div>
 
-      <!-- ЗНАНИЕ -->
+      <!-- ОЦЕНКА -->
       <div class="nav-buttons">
         <button id="knowBtn">Знаю</button>
         <button id="dontKnowBtn">Не знаю</button>
       </div>
 
-      <p id="wordStatus" class="small-text">
-        Статус: Пока не отмечено
-      </p>
+      <p id="wordStatus" class="small-text"></p>
+      <p id="statsBox" class="small-text"></p>
     </div>
 
-    <!-- TEST -->
+    <!-- ТЕСТ -->
     <div id="testSection" class="panel hidden">
-      <div class="question-count" id="testCounter">Вопрос 0 / 0</div>
-      <div class="word" id="testWord">Сначала загрузите слова</div>
 
-      <div class="answers" id="answersContainer"></div>
+      <div id="testCounter" class="question-count"></div>
+      <div id="testWord" class="word"></div>
 
-      <div class="message" id="testMessage"></div>
+      <div id="answersContainer" class="answers"></div>
+
+      <p id="testMessage"></p>
 
       <div class="nav-buttons">
-        <button id="nextQuestionBtn" class="hidden">Следующий вопрос</button>
-        <button id="restartTestBtn" class="hidden">Пройти тест заново</button>
+        <button id="nextQuestionBtn" class="hidden">Дальше</button>
+        <button id="restartTestBtn" class="hidden">Заново</button>
       </div>
 
-      <div class="result-box hidden" id="resultBox"></div>
+      <div id="resultBox" class="small-text"></div>
+    </div>
+
+    <!-- РЕЖИМ ПРЕЗЕНТАЦИИ -->
+    <div id="presentationSection" class="presentation-panel hidden">
+      <button id="presentationExitBtn" class="presentation-exit-btn">✕ Выход</button>
+      <button id="presentationPauseBtn" class="presentation-control-btn pause-btn">⏸ Пауза</button>
+      <button id="presentationStopBtn" class="presentation-control-btn stop-btn">⏹ Остановить</button>
+      
+      <div class="presentation-content">
+        <div id="presentationCounter" class="presentation-counter"></div>
+        <div id="presentationWord" class="presentation-word"></div>
+        <div id="presentationTranslation" class="presentation-translation"></div>
+        <div id="presentationExamples" class="presentation-examples">
+          <p><span class="example-label">DE:</span> <span id="presentationExampleDe"></span></p>
+          <p><span class="example-label">RU:</span> <span id="presentationExampleRu"></span></p>
+        </div>
+      </div>
+      
+      <div class="presentation-progress">
+        <div id="presentationProgressBar" class="presentation-progress-bar"></div>
+      </div>
     </div>
   </div>
 

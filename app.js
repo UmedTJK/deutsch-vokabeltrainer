@@ -13,9 +13,11 @@ const autoNextCheckbox = document.getElementById("autoNextCheckbox");
 
 const cardsModeBtn = document.getElementById("cardsModeBtn");
 const testModeBtn = document.getElementById("testModeBtn");
+const presentationModeBtn = document.getElementById("presentationModeBtn");
 
 const cardsSection = document.getElementById("cardsSection");
 const testSection = document.getElementById("testSection");
+const presentationSection = document.getElementById("presentationSection");
 
 const cardsCounter = document.getElementById("cardsCounter");
 const cardWord = document.getElementById("cardWord");
@@ -42,6 +44,27 @@ const nextQuestionBtn = document.getElementById("nextQuestionBtn");
 const restartTestBtn = document.getElementById("restartTestBtn");
 const resultBox = document.getElementById("resultBox");
 
+// Элементы режима ввода
+const typingModeBtn = document.getElementById("typingModeBtn");
+const typingSection = document.getElementById("typingSection");
+const typingInput = document.getElementById("typingInput");
+const checkTypingBtn = document.getElementById("checkTypingBtn");
+const typingFeedback = document.getElementById("typingFeedback");
+const typingMessage = document.getElementById("typingMessage");
+const typingCorrectAnswer = document.getElementById("typingCorrectAnswer");
+
+// Элементы режима презентации
+const presentationWord = document.getElementById("presentationWord");
+const presentationTranslation = document.getElementById("presentationTranslation");
+const presentationExamples = document.getElementById("presentationExamples");
+const presentationExampleDe = document.getElementById("presentationExampleDe");
+const presentationExampleRu = document.getElementById("presentationExampleRu");
+const presentationCounter = document.getElementById("presentationCounter");
+const presentationProgressBar = document.getElementById("presentationProgressBar");
+const presentationExitBtn = document.getElementById("presentationExitBtn");
+const presentationPauseBtn = document.getElementById("presentationPauseBtn");
+const presentationStopBtn = document.getElementById("presentationStopBtn");
+
 const STORAGE_KEY = "germanTrainerProgress";
 
 let words = [];
@@ -55,6 +78,19 @@ let testQuestions = [];
 let currentTestIndex = 0;
 let score = 0;
 let answered = false;
+
+// Переменные для режима ввода
+let typingModeActive = false;
+let currentCorrectAnswer = "";
+
+// Переменные для режима презентации
+let presentationModeActive = false;
+let presentationWordsList = [];
+let presentationCurrentIndex = 0;
+let presentationTimer = null;
+let presentationInterval = 11000; // 11 секунд (8 + 3)
+let presentationPaused = false;
+let presentationAnimationFrame = null;
 
 function shuffleArray(array) {
   const newArray = [...array];
@@ -100,6 +136,10 @@ async function loadWords() {
     currentSearchTerm = "";
     searchInput.value = "";
     currentCardIndex = 0;
+    
+    if (typingModeActive) {
+      toggleTypingMode();
+    }
 
     showCard();
     createTestQuestions();
@@ -108,6 +148,25 @@ async function loadWords() {
   } catch (e) {
     alert("Ошибка загрузки");
   }
+}
+
+function updateWordStatus(status) {
+  if (status === "known") wordStatus.textContent = "Знаю";
+  else if (status === "unknown") wordStatus.textContent = "Не знаю";
+  else wordStatus.textContent = "—";
+}
+
+function updateStats() {
+  const source = isFilteredMode ? filteredWords : words;
+  let k = 0, u = 0, n = 0;
+
+  source.forEach(w => {
+    if (w.status === "known") k++;
+    else if (w.status === "unknown") u++;
+    else n++;
+  });
+
+  statsBox.textContent = `✅ ${k} | ❌ ${u} | ⚪ ${n}`;
 }
 
 function showCard() {
@@ -137,25 +196,10 @@ function showCard() {
   updateWordStatus(w.status);
   cardAnswer.classList.add("hidden");
   updateStats();
-}
-
-function updateWordStatus(status) {
-  if (status === "known") wordStatus.textContent = "Знаю";
-  else if (status === "unknown") wordStatus.textContent = "Не знаю";
-  else wordStatus.textContent = "—";
-}
-
-function updateStats() {
-  const source = isFilteredMode ? filteredWords : words;
-  let k = 0, u = 0, n = 0;
-
-  source.forEach(w => {
-    if (w.status === "known") k++;
-    else if (w.status === "unknown") u++;
-    else n++;
-  });
-
-  statsBox.textContent = `✅ ${k} | ❌ ${u} | ⚪ ${n}`;
+  
+  if (typingModeActive) {
+    prepareTypingMode();
+  }
 }
 
 function showNextCard() {
@@ -181,7 +225,7 @@ function markWord(status) {
   saveProgress(daySelect.value, words);
   updateStats();
 
-  if (autoNextCheckbox.checked) showNextCard();
+  if (autoNextCheckbox.checked && !typingModeActive) showNextCard();
 }
 
 function repeatUnknownWords() {
@@ -224,8 +268,206 @@ function showRandomWord() {
   showCard();
 }
 
-/* TEST */
+/* РЕЖИМ ВВОДА */
+function toggleTypingMode() {
+  typingModeActive = !typingModeActive;
+  
+  if (typingModeActive) {
+    typingModeBtn.classList.add("active");
+    typingSection.classList.remove("hidden");
+    cardAnswer.classList.add("hidden");
+    prepareTypingMode();
+  } else {
+    typingModeBtn.classList.remove("active");
+    typingSection.classList.add("hidden");
+    hideTypingFeedback();
+  }
+}
 
+function prepareTypingMode() {
+  const source = isFilteredMode ? filteredWords : words;
+  if (!source.length) return;
+  
+  const w = source[currentCardIndex];
+  
+  if (cardMode === "de-to-ru") {
+    currentCorrectAnswer = w.translation.toLowerCase().trim();
+  } else {
+    currentCorrectAnswer = w.word.toLowerCase().trim();
+  }
+  
+  typingInput.value = "";
+  hideTypingFeedback();
+}
+
+function checkTypingAnswer() {
+  const userAnswer = typingInput.value.toLowerCase().trim();
+  
+  if (userAnswer === currentCorrectAnswer) {
+    typingFeedback.className = "typing-feedback correct";
+    typingMessage.textContent = "✅ Правильно! Отлично!";
+    typingCorrectAnswer.textContent = "";
+    
+    markWord("known");
+    
+    if (autoNextCheckbox.checked) {
+      setTimeout(() => {
+        showNextCard();
+        if (typingModeActive) prepareTypingMode();
+      }, 1000);
+    }
+  } else {
+    typingFeedback.className = "typing-feedback wrong";
+    typingMessage.textContent = "❌ Неправильно. Попробуйте ещё раз!";
+    typingCorrectAnswer.textContent = `Правильный ответ: ${currentCorrectAnswer}`;
+    
+    markWord("unknown");
+  }
+  
+  typingFeedback.classList.remove("hidden");
+}
+
+function hideTypingFeedback() {
+  typingFeedback.classList.add("hidden");
+  typingInput.value = "";
+}
+
+/* РЕЖИМ ПРЕЗЕНТАЦИИ */
+function startPresentationMode() {
+  if (!words.length) {
+    alert("Сначала загрузите слова");
+    return;
+  }
+  
+  presentationModeActive = true;
+  presentationWordsList = [...words];
+  presentationCurrentIndex = 0;
+  presentationPaused = false;
+  
+  cardsSection.classList.add("hidden");
+  testSection.classList.add("hidden");
+  presentationSection.classList.remove("hidden");
+  
+  cardsModeBtn.classList.remove("active");
+  testModeBtn.classList.remove("active");
+  presentationModeBtn.classList.add("active");
+  
+  presentationPauseBtn.textContent = "⏸ Пауза";
+  
+  showPresentationSlide();
+}
+
+function showPresentationSlide() {
+  if (presentationCurrentIndex >= presentationWordsList.length) {
+    presentationCurrentIndex = 0;
+  }
+  
+  const word = presentationWordsList[presentationCurrentIndex];
+  
+  presentationCounter.textContent = `${presentationCurrentIndex + 1} / ${presentationWordsList.length}`;
+  
+  // Скрываем перевод и примеры (плавно)
+  presentationTranslation.style.opacity = "0";
+  presentationExamples.style.opacity = "0";
+  
+  // Показываем слово
+  presentationWord.textContent = word.word;
+  presentationWord.style.opacity = "1";
+  
+  // Запускаем прогресс-бар
+  startProgressBar();
+  
+  // Показываем перевод через 1000ms
+  setTimeout(() => {
+    if (presentationModeActive && !presentationPaused && presentationCurrentIndex < presentationWordsList.length) {
+      presentationTranslation.textContent = word.translation;
+      presentationTranslation.style.opacity = "1";
+    }
+  }, 1000);
+  
+  // Показываем примеры через 2000ms
+  setTimeout(() => {
+    if (presentationModeActive && !presentationPaused && presentationCurrentIndex < presentationWordsList.length) {
+      presentationExampleDe.textContent = word.example_de;
+      presentationExampleRu.textContent = word.example_ru;
+      presentationExamples.style.opacity = "1";
+    }
+  }, 2000);
+  
+  // Очищаем предыдущий таймер
+  if (presentationTimer) clearTimeout(presentationTimer);
+  
+  // Устанавливаем таймер на следующее слово
+  presentationTimer = setTimeout(() => {
+    if (presentationModeActive && !presentationPaused) {
+      presentationCurrentIndex++;
+      showPresentationSlide();
+    }
+  }, presentationInterval);
+}
+
+function startProgressBar() {
+  let startTime = Date.now();
+  const duration = presentationInterval;
+  
+  function updateProgress() {
+    if (!presentationModeActive || presentationPaused) return;
+    
+    const elapsed = Date.now() - startTime;
+    const percent = Math.min((elapsed / duration) * 100, 100);
+    presentationProgressBar.style.width = `${percent}%`;
+    
+    if (percent < 100) {
+      presentationAnimationFrame = requestAnimationFrame(updateProgress);
+    }
+  }
+  
+  if (presentationAnimationFrame) cancelAnimationFrame(presentationAnimationFrame);
+  updateProgress();
+}
+
+function pausePresentation() {
+  if (!presentationModeActive) return;
+  
+  presentationPaused = !presentationPaused;
+  
+  if (presentationPaused) {
+    presentationPauseBtn.textContent = "▶ Старт";
+    if (presentationTimer) clearTimeout(presentationTimer);
+    if (presentationAnimationFrame) cancelAnimationFrame(presentationAnimationFrame);
+  } else {
+    presentationPauseBtn.textContent = "⏸ Пауза";
+    // Перезапускаем прогресс-бар с текущего момента
+    startProgressBar();
+    // Перезапускаем таймер
+    presentationTimer = setTimeout(() => {
+      if (presentationModeActive && !presentationPaused) {
+        presentationCurrentIndex++;
+        showPresentationSlide();
+      }
+    }, presentationInterval);
+  }
+}
+
+function stopPresentation() {
+  if (!presentationModeActive) return;
+  
+  if (confirm("Остановить презентацию и вернуться к карточкам?")) {
+    if (presentationTimer) clearTimeout(presentationTimer);
+    if (presentationAnimationFrame) cancelAnimationFrame(presentationAnimationFrame);
+    presentationModeActive = false;
+    switchToCards();
+  }
+}
+
+function exitPresentation() {
+  if (presentationTimer) clearTimeout(presentationTimer);
+  if (presentationAnimationFrame) cancelAnimationFrame(presentationAnimationFrame);
+  presentationModeActive = false;
+  switchToCards();
+}
+
+/* ТЕСТ */
 function createTestQuestions() {
   testQuestions = words.map(w => ({
     word: w.word,
@@ -238,7 +480,10 @@ function createTestQuestions() {
 }
 
 function showTestQuestion() {
-  if (currentTestIndex >= testQuestions.length) return;
+  if (currentTestIndex >= testQuestions.length) {
+    showTestResult();
+    return;
+  }
 
   const q = testQuestions[currentTestIndex];
   testWord.textContent = q.word;
@@ -247,22 +492,96 @@ function showTestQuestion() {
   q.options.forEach(opt => {
     const btn = document.createElement("button");
     btn.textContent = opt;
-    btn.onclick = () => {
-      if (opt === q.correct) score++;
-      currentTestIndex++;
-      showTestQuestion();
-    };
+    btn.classList.add("answer-btn");
+    btn.onclick = () => handleTestAnswer(btn, opt, q.correct);
     answersContainer.appendChild(btn);
   });
+}
+
+function handleTestAnswer(btn, selected, correct) {
+  if (answered) return;
+  answered = true;
+  
+  if (selected === correct) {
+    score++;
+    btn.classList.add("correct");
+    testMessage.textContent = "✅ Правильно!";
+  } else {
+    btn.classList.add("wrong");
+    testMessage.textContent = `❌ Неправильно. Правильно: ${correct}`;
+    
+    const btns = document.querySelectorAll(".answer-btn");
+    btns.forEach(b => {
+      if (b.textContent === correct) {
+        b.classList.add("correct");
+      }
+    });
+  }
+  
+  nextQuestionBtn.classList.remove("hidden");
+}
+
+function showTestResult() {
+  testWord.textContent = "Тест завершён!";
+  answersContainer.innerHTML = "";
+  testMessage.textContent = "";
+  nextQuestionBtn.classList.add("hidden");
+  restartTestBtn.classList.remove("hidden");
+  
+  const percent = Math.round((score / testQuestions.length) * 100);
+  resultBox.textContent = `Результат: ${score} из ${testQuestions.length} (${percent}%)`;
 }
 
 function resetTestUI() {
   currentTestIndex = 0;
   score = 0;
+  answered = false;
+  testMessage.textContent = "";
+  resultBox.textContent = "";
+  nextQuestionBtn.classList.add("hidden");
+  restartTestBtn.classList.add("hidden");
+  
+  if (testQuestions.length) {
+    showTestQuestion();
+  }
+}
+
+function nextTestQuestion() {
+  currentTestIndex++;
+  answered = false;
+  testMessage.textContent = "";
+  nextQuestionBtn.classList.add("hidden");
+  showTestQuestion();
+}
+
+function restartTest() {
+  resetTestUI();
+}
+
+/* ПЕРЕКЛЮЧЕНИЕ МЕЖДУ РЕЖИМАМИ */
+function switchToCards() {
+  cardsSection.classList.remove("hidden");
+  testSection.classList.add("hidden");
+  presentationSection.classList.add("hidden");
+  cardsModeBtn.classList.add("active");
+  testModeBtn.classList.remove("active");
+  presentationModeBtn.classList.remove("active");
+}
+
+function switchToTest() {
+  cardsSection.classList.add("hidden");
+  testSection.classList.remove("hidden");
+  presentationSection.classList.add("hidden");
+  testModeBtn.classList.add("active");
+  cardsModeBtn.classList.remove("active");
+  presentationModeBtn.classList.remove("active");
+  
+  if (testQuestions.length) {
+    resetTestUI();
+  }
 }
 
 /* EVENTS */
-
 loadBtn.onclick = loadWords;
 showAnswerBtn.onclick = () => cardAnswer.classList.remove("hidden");
 
@@ -283,3 +602,25 @@ cardModeSelect.onchange = () => {
   cardMode = cardModeSelect.value;
   showCard();
 };
+
+typingModeBtn.onclick = toggleTypingMode;
+checkTypingBtn.onclick = checkTypingAnswer;
+
+typingInput.onkeypress = (e) => {
+  if (e.key === "Enter") {
+    checkTypingAnswer();
+  }
+};
+
+presentationModeBtn.onclick = startPresentationMode;
+presentationExitBtn.onclick = exitPresentation;
+presentationPauseBtn.onclick = pausePresentation;
+presentationStopBtn.onclick = stopPresentation;
+
+cardsModeBtn.onclick = switchToCards;
+testModeBtn.onclick = switchToTest;
+
+nextQuestionBtn.onclick = nextTestQuestion;
+restartTestBtn.onclick = restartTest;
+
+loadWords();
