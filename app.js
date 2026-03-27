@@ -14,6 +14,7 @@ const cardAnswer = document.getElementById("cardAnswer");
 const cardTranslation = document.getElementById("cardTranslation");
 const cardExampleDe = document.getElementById("cardExampleDe");
 const cardExampleRu = document.getElementById("cardExampleRu");
+const cardModeSelect = document.getElementById("cardModeSelect");
 
 const showAnswerBtn = document.getElementById("showAnswerBtn");
 const prevBtn = document.getElementById("prevBtn");
@@ -37,6 +38,7 @@ let words = [];
 let filteredWords = [];
 let isFilteredMode = false;
 let currentCardIndex = 0;
+let cardMode = "de-to-ru";
 
 let testQuestions = [];
 let currentTestIndex = 0;
@@ -45,7 +47,12 @@ let answered = false;
 
 function saveProgress(day, words) {
   const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-  stored[day] = words.map((word) => word.status);
+
+  stored[day] = words.reduce((acc, word) => {
+    acc[word.word] = word.status || null;
+    return acc;
+  }, {});
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
 }
 
@@ -56,9 +63,9 @@ function loadProgress(day, words) {
     return words;
   }
 
-  return words.map((word, index) => ({
+  return words.map((word) => ({
     ...word,
-    status: stored[day][index] || null
+    status: stored[day][word.word] || null
   }));
 }
 
@@ -85,6 +92,7 @@ async function loadWords() {
     }
 
     words = loadProgress(selectedDay, words);
+    words = shuffleArray(words);
 
     isFilteredMode = false;
     filteredWords = [];
@@ -107,6 +115,9 @@ function showCard() {
   if (source.length === 0) {
     cardWord.textContent = "Нет загруженных слов";
     cardsCounter.textContent = "Слово 0 / 0";
+    cardTranslation.textContent = "";
+    cardExampleDe.textContent = "";
+    cardExampleRu.textContent = "";
     cardAnswer.classList.add("hidden");
     updateWordStatus(null);
     return;
@@ -115,10 +126,18 @@ function showCard() {
   const currentWord = source[currentCardIndex];
 
   cardsCounter.textContent = `Слово ${currentCardIndex + 1} / ${source.length}`;
-  cardWord.textContent = currentWord.word;
-  cardTranslation.textContent = `Перевод: ${currentWord.translation}`;
-  cardExampleDe.textContent = currentWord.example_de;
-  cardExampleRu.textContent = currentWord.example_ru;
+
+  if (cardMode === "de-to-ru") {
+    cardWord.textContent = currentWord.word;
+    cardTranslation.textContent = `Перевод: ${currentWord.translation}`;
+    cardExampleDe.textContent = currentWord.example_de;
+    cardExampleRu.textContent = currentWord.example_ru;
+  } else {
+    cardWord.textContent = currentWord.translation;
+    cardTranslation.textContent = `Немецкое слово: ${currentWord.word}`;
+    cardExampleDe.textContent = currentWord.example_de;
+    cardExampleRu.textContent = currentWord.example_ru;
+  }
 
   updateWordStatus(currentWord.status);
   cardAnswer.classList.add("hidden");
@@ -322,9 +341,15 @@ function resetTestUI() {
   showTestQuestion();
 }
 
+function changeCardMode() {
+  cardMode = cardModeSelect.value;
+  showCard();
+}
+
 showAnswerBtn.addEventListener("click", () => {
   cardAnswer.classList.remove("hidden");
 });
+cardModeSelect.addEventListener("change", changeCardMode);
 
 prevBtn.addEventListener("click", showPrevCard);
 nextBtn.addEventListener("click", showNextCard);
