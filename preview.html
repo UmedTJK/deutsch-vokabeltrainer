@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deutsch Vokabeltrainer</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <style>
+    body {
+      background: #f5f7fb;
+    }
+
+    .app-card {
+      max-width: 900px;
+      margin: 30px auto;
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      background: white;
+      padding: 24px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .word-box {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .example-box {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .answer-btn {
+      width: 100%;
+      text-align: left;
+      margin-bottom: 10px;
+    }
+
+    .mode-btn {
+      min-width: 160px;
+    }
+
+    .small-muted {
+      color: #6c757d;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-4">
+    <div class="app-card">
+      <h1 class="mb-3">Deutsch Vokabeltrainer</h1>
+      <p class="small-muted">
+        Локальный тренажёр для слов B2 Beruf
+      </p>
+
+      <hr />
+
+      <div class="mb-4">
+        <label for="daySelect" class="form-label fw-semibold">Выбери день</label>
+        <select id="daySelect" class="form-select"></select>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2 mb-4">
+        <button id="flashcardsModeBtn" class="btn btn-primary mode-btn">Карточки</button>
+        <button id="quizModeBtn" class="btn btn-outline-primary mode-btn">Мини-тест</button>
+      </div>
+
+      <!-- FLASHCARDS -->
+      <div id="flashcardsSection">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="mb-0">Режим: Карточки</h3>
+          <span id="flashcardProgress" class="badge text-bg-secondary"></span>
+        </div>
+
+        <div id="flashcardContent" class="border rounded-4 p-4">
+          <div class="word-box mb-3" id="flashcardWord">—</div>
+
+          <div class="mb-3">
+            <button id="showAnswerBtn" class="btn btn-success">Показать ответ</button>
+          </div>
+
+          <div id="flashcardAnswer" class="hidden">
+            <div class="mb-2">
+              <strong>Перевод:</strong>
+              <span id="flashcardTranslation"></span>
+            </div>
+
+            <div class="example-box">
+              <div><strong>Пример DE:</strong> <span id="flashcardExampleDe"></span></div>
+              <div class="mt-2"><strong>Пример RU:</strong> <span id="flashcardExampleRu"></span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+          <button id="prevFlashcardBtn" class="btn btn-outline-secondary">Назад</button>
+          <button id="nextFlashcardBtn" class="btn btn-primary">Следующее слово</button>
+        </div>
+      </div>
+
+      <!-- QUIZ -->
+      <div id="quizSection" class="hidden">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="mb-0">Режим: Мини-тест</h3>
+          <span id="quizProgress" class="badge text-bg-secondary"></span>
+        </div>
+
+        <div id="quizBox" class="border rounded-4 p-4">
+          <div class="mb-3">
+            <strong>Что значит слово:</strong>
+          </div>
+
+          <div class="word-box mb-4" id="quizWord">—</div>
+
+          <div id="answersContainer"></div>
+
+          <div id="quizFeedback" class="mt-3 fw-semibold"></div>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+          <button id="nextQuestionBtn" class="btn btn-primary hidden">Следующий вопрос</button>
+          <button id="restartQuizBtn" class="btn btn-outline-secondary hidden">Пройти заново</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const vocabularyData = {
+      "Tag 1": [
+        {
+          word: "die Bewerbung",
+          translation: "заявление, отклик на вакансию",
+          example_de: "Ich habe heute eine Bewerbung geschrieben.",
+          example_ru: "Сегодня я написал заявление на вакансию."
+        },
+        {
+          word: "zuverlässig",
+          translation: "надежный",
+          example_de: "Er ist ein zuverlässiger Mitarbeiter.",
+          example_ru: "Он надежный сотрудник."
+        },
+        {
+          word: "die Erfahrung",
+          translation: "опыт",
+          example_de: "Ich habe schon Erfahrung im Verkauf.",
+          example_ru: "У меня уже есть опыт в продажах."
+        },
+        {
+          word: "die Fähigkeit",
+          translation: "способность, навык",
+          example_de: "Kommunikation ist eine wichtige Fähigkeit.",
+          example_ru: "Коммуникация — важный навык."
+        },
+        {
+          word: "sich bewerben",
+          translation: "подавать заявку, откликаться",
+          example_de: "Ich möchte mich um diese Stelle bewerben.",
+          example_ru: "Я хочу подать заявку на эту должность."
+        }
+      ],
+      "Tag 2": [
+        {
+          word: "die Schicht",
+          translation: "смена",
+          example_de: "Ich arbeite in der Frühschicht.",
+          example_ru: "Я работаю в утреннюю смену."
+        },
+        {
+          word: "belastbar",
+          translation: "выносливый, стрессоустойчивый",
+          example_de: "Im Beruf muss man oft belastbar sein.",
+          example_ru: "На работе часто нужно быть стрессоустойчивым."
+        },
+        {
+          word: "pünktlich",
+          translation: "пунктуальный",
+          example_de: "Er kommt immer pünktlich zur Arbeit.",
+          example_ru: "Он всегда приходит на работу вовремя."
+        },
+        {
+          word: "die Aufgabe",
+          translation: "задача",
+          example_de: "Heute habe ich viele Aufgaben.",
+          example_ru: "Сегодня у меня много задач."
+        },
+        {
+          word: "erledigen",
+          translation: "выполнять, завершать",
+          example_de: "Ich muss diese Aufgabe heute erledigen.",
+          example_ru: "Я должен выполнить эту задачу сегодня."
+        }
+      ]
+    };
+
+    const daySelect = document.getElementById("daySelect");
+
+    const flashcardsSection = document.getElementById("flashcardsSection");
+    const quizSection = document.getElementById("quizSection");
+
+    const flashcardsModeBtn = document.getElementById("flashcardsModeBtn");
+    const quizModeBtn = document.getElementById("quizModeBtn");
+
+    const flashcardWord = document.getElementById("flashcardWord");
+    const flashcardTranslation = document.getElementById("flashcardTranslation");
+    const flashcardExampleDe = document.getElementById("flashcardExampleDe");
+    const flashcardExampleRu = document.getElementById("flashcardExampleRu");
+    const flashcardAnswer = document.getElementById("flashcardAnswer");
+    const flashcardProgress = document.getElementById("flashcardProgress");
+
+    const showAnswerBtn = document.getElementById("showAnswerBtn");
+    const prevFlashcardBtn = document.getElementById("prevFlashcardBtn");
+    const nextFlashcardBtn = document.getElementById("nextFlashcardBtn");
+
+    const quizWord = document.getElementById("quizWord");
+    const answersContainer = document.getElementById("answersContainer");
+    const quizProgress = document.getElementById("quizProgress");
+    const quizFeedback = document.getElementById("quizFeedback");
+    const nextQuestionBtn = document.getElementById("nextQuestionBtn");
+    const restartQuizBtn = document.getElementById("restartQuizBtn");
+
+    let currentDay = "Tag 1";
+    let currentWords = vocabularyData[currentDay];
+
+    let flashcardIndex = 0;
+
+    let quizQuestions = [];
+    let currentQuizIndex = 0;
+    let score = 0;
+    let answerLocked = false;
+
+    function initDaySelect() {
+      const days = Object.keys(vocabularyData);
+
+      days.forEach(day => {
+        const option = document.createElement("option");
+        option.value = day;
+        option.textContent = day;
+        daySelect.appendChild(option);
+      });
+
+      daySelect.value = currentDay;
+
+      daySelect.addEventListener("change", () => {
+        currentDay = daySelect.value;
+        currentWords = vocabularyData[currentDay];
+        resetFlashcards();
+        startQuiz();
+      });
+    }
+
+    function resetFlashcards() {
+      flashcardIndex = 0;
+      renderFlashcard();
+    }
+
+    function renderFlashcard() {
+      const item = currentWords[flashcardIndex];
+      flashcardWord.textContent = item.word;
+      flashcardTranslation.textContent = item.translation;
+      flashcardExampleDe.textContent = item.example_de;
+      flashcardExampleRu.textContent = item.example_ru;
+      flashcardAnswer.classList.add("hidden");
+      flashcardProgress.textContent = `${flashcardIndex + 1} / ${currentWords.length}`;
+    }
+
+    showAnswerBtn.addEventListener("click", () => {
+      flashcardAnswer.classList.remove("hidden");
+    });
+
+    nextFlashcardBtn.addEventListener("click", () => {
+      flashcardIndex = (flashcardIndex + 1) % currentWords.length;
+      renderFlashcard();
+    });
+
+    prevFlashcardBtn.addEventListener("click", () => {
+      flashcardIndex = (flashcardIndex - 1 + currentWords.length) % currentWords.length;
+      renderFlashcard();
+    });
+
+    function shuffleArray(array) {
+      const cloned = [...array];
+      for (let i = cloned.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cloned[i], cloned[j]] = [cloned[j], cloned[i]];
+      }
+      return cloned;
+    }
+
+    function getRandomWrongAnswers(correctTranslation, allWords, count = 3) {
+      const wrongAnswers = allWords
+        .map(item => item.translation)
+        .filter(translation => translation !== correctTranslation);
+
+      return shuffleArray(wrongAnswers).slice(0, count);
+    }
+
+    function buildQuizQuestions() {
+      return shuffleArray(currentWords).map(item => {
+        const wrongAnswers = getRandomWrongAnswers(item.translation, currentWords, 3);
+        const allAnswers = shuffleArray([item.translation, ...wrongAnswers]);
+
+        return {
+          word: item.word,
+          correct: item.translation,
+          answers: allAnswers
+        };
+      });
+    }
+
+    function startQuiz() {
+      quizQuestions = buildQuizQuestions();
+      currentQuizIndex = 0;
+      score = 0;
+      answerLocked = false;
+      nextQuestionBtn.classList.add("hidden");
+      restartQuizBtn.classList.add("hidden");
+      quizFeedback.textContent = "";
+      renderQuizQuestion();
+    }
+
+    function renderQuizQuestion() {
+      if (currentQuizIndex >= quizQuestions.length) {
+        showQuizResults();
+        return;
+      }
+
+      const question = quizQuestions[currentQuizIndex];
+      quizWord.textContent = question.word;
+      quizProgress.textContent = `${currentQuizIndex + 1} / ${quizQuestions.length}`;
+      answersContainer.innerHTML = "";
+      quizFeedback.textContent = "";
+      nextQuestionBtn.classList.add("hidden");
+      answerLocked = false;
+
+      question.answers.forEach(answer => {
+        const button = document.createElement("button");
+        button.className = "btn btn-outline-dark answer-btn";
+        button.textContent = answer;
+        button.addEventListener("click", () => handleAnswer(answer, question.correct, button));
+        answersContainer.appendChild(button);
+      });
+    }
+
+    function handleAnswer(selected, correct, clickedButton) {
+      if (answerLocked) return;
+      answerLocked = true;
+
+      const buttons = answersContainer.querySelectorAll("button");
+
+      buttons.forEach(btn => {
+        btn.disabled = true;
+
+        if (btn.textContent === correct) {
+          btn.classList.remove("btn-outline-dark");
+          btn.classList.add("btn-success");
+        }
+      });
+
+      if (selected === correct) {
+        score++;
+        quizFeedback.textContent = "Правильно.";
+        clickedButton.classList.remove("btn-outline-dark");
+        clickedButton.classList.add("btn-success");
+      } else {
+        quizFeedback.textContent = `Неправильно. Верный ответ: ${correct}`;
+        clickedButton.classList.remove("btn-outline-dark");
+        clickedButton.classList.add("btn-danger");
+      }
+
+      nextQuestionBtn.classList.remove("hidden");
+    }
+
+    nextQuestionBtn.addEventListener("click", () => {
+      currentQuizIndex++;
+      renderQuizQuestion();
+    });
+
+    restartQuizBtn.addEventListener("click", () => {
+      startQuiz();
+    });
+
+    function showQuizResults() {
+      quizWord.textContent = "Тест завершён";
+      answersContainer.innerHTML = "";
+      quizProgress.textContent = "Готово";
+      quizFeedback.textContent = `Твой результат: ${score} из ${quizQuestions.length}`;
+      nextQuestionBtn.classList.add("hidden");
+      restartQuizBtn.classList.remove("hidden");
+    }
+
+    flashcardsModeBtn.addEventListener("click", () => {
+      flashcardsSection.classList.remove("hidden");
+      quizSection.classList.add("hidden");
+
+      flashcardsModeBtn.classList.remove("btn-outline-primary");
+      flashcardsModeBtn.classList.add("btn-primary");
+
+      quizModeBtn.classList.remove("btn-primary");
+      quizModeBtn.classList.add("btn-outline-primary");
+    });
+
+    quizModeBtn.addEventListener("click", () => {
+      quizSection.classList.remove("hidden");
+      flashcardsSection.classList.add("hidden");
+
+      quizModeBtn.classList.remove("btn-outline-primary");
+      quizModeBtn.classList.add("btn-primary");
+
+      flashcardsModeBtn.classList.remove("btn-primary");
+      flashcardsModeBtn.classList.add("btn-outline-primary");
+    });
+
+    initDaySelect();
+    renderFlashcard();
+    startQuiz();
+  </script>
+</body>
+</html>

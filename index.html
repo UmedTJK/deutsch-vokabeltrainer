@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>German B2 Beruf Trainer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      margin: 0;
+      padding: 20px;
+      color: #222;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .panel {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    select, button {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.95;
+    }
+
+    .word {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .translation, .examples {
+      margin-top: 12px;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .mode-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .active {
+      background: #222;
+      color: white;
+      border-color: #222;
+    }
+
+    .question-count {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .answers {
+      display: grid;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .answer-btn {
+      text-align: left;
+      background: white;
+    }
+
+    .answer-btn.correct {
+      background: #d4edda;
+      border-color: #28a745;
+    }
+
+    .answer-btn.wrong {
+      background: #f8d7da;
+      border-color: #dc3545;
+    }
+
+    .result-box {
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    .small-text {
+      color: #666;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .message {
+      margin-top: 10px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    @media (max-width: 600px) {
+      .word {
+        font-size: 26px;
+      }
+
+      select, button {
+        width: 100%;
+      }
+
+      .mode-buttons,
+      .nav-buttons,
+      .controls {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>German B2 Beruf Trainer</h1>
+    <p class="small-text">Локальный тренажёр немецких слов</p>
+
+    <div class="panel">
+      <div class="controls">
+        <select id="daySelect">
+          <option value="tag1">Tag 1</option>
+          <option value="tag2">Tag 2</option>
+        </select>
+        <button id="loadBtn">Загрузить слова</button>
+      </div>
+
+      <div class="mode-buttons">
+        <button id="cardsModeBtn" class="active">Карточки</button>
+        <button id="testModeBtn">Мини-тест</button>
+      </div>
+    </div>
+
+    <!-- CARDS -->
+    <div id="cardsSection" class="panel">
+      <div class="question-count" id="cardsCounter">Слово 0 / 0</div>
+      <div class="word" id="cardWord">Сначала загрузите слова</div>
+
+      <div id="cardAnswer" class="hidden">
+        <div class="translation" id="cardTranslation"></div>
+        <div class="examples">
+          <p><strong>DE:</strong> <span id="cardExampleDe"></span></p>
+          <p><strong>RU:</strong> <span id="cardExampleRu"></span></p>
+        </div>
+      </div>
+
+      <!-- Навигация -->
+      <div class="nav-buttons">
+        <button id="showAnswerBtn">Показать ответ</button>
+        <button id="prevBtn">Назад</button>
+        <button id="nextBtn">Вперёд</button>
+      </div>
+
+      <!-- ЗНАНИЕ -->
+      <div class="nav-buttons">
+        <button id="knowBtn">Знаю</button>
+        <button id="dontKnowBtn">Не знаю</button>
+      </div>
+
+      <p id="wordStatus" class="small-text">
+        Статус: Пока не отмечено
+      </p>
+    </div>
+
+    <!-- TEST -->
+    <div id="testSection" class="panel hidden">
+      <div class="question-count" id="testCounter">Вопрос 0 / 0</div>
+      <div class="word" id="testWord">Сначала загрузите слова</div>
+
+      <div class="answers" id="answersContainer"></div>
+
+      <div class="message" id="testMessage"></div>
+
+      <div class="nav-buttons">
+        <button id="nextQuestionBtn" class="hidden">Следующий вопрос</button>
+        <button id="restartTestBtn" class="hidden">Пройти тест заново</button>
+      </div>
+
+      <div class="result-box hidden" id="resultBox"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
