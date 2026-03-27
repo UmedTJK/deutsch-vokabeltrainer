@@ -1,5 +1,6 @@
 const daySelect = document.getElementById("daySelect");
 const loadBtn = document.getElementById("loadBtn");
+const repeatUnknownBtn = document.getElementById("repeatUnknownBtn");
 
 const cardsModeBtn = document.getElementById("cardsModeBtn");
 const testModeBtn = document.getElementById("testModeBtn");
@@ -33,6 +34,8 @@ const resultBox = document.getElementById("resultBox");
 const STORAGE_KEY = "germanTrainerProgress";
 
 let words = [];
+let filteredWords = [];
+let isFilteredMode = false;
 let currentCardIndex = 0;
 
 let testQuestions = [];
@@ -83,6 +86,8 @@ async function loadWords() {
 
     words = loadProgress(selectedDay, words);
 
+    isFilteredMode = false;
+    filteredWords = [];
     currentCardIndex = 0;
     showCard();
 
@@ -97,7 +102,9 @@ async function loadWords() {
 }
 
 function showCard() {
-  if (words.length === 0) {
+  const source = isFilteredMode ? filteredWords : words;
+
+  if (source.length === 0) {
     cardWord.textContent = "Нет загруженных слов";
     cardsCounter.textContent = "Слово 0 / 0";
     cardAnswer.classList.add("hidden");
@@ -105,9 +112,9 @@ function showCard() {
     return;
   }
 
-  const currentWord = words[currentCardIndex];
+  const currentWord = source[currentCardIndex];
 
-  cardsCounter.textContent = `Слово ${currentCardIndex + 1} / ${words.length}`;
+  cardsCounter.textContent = `Слово ${currentCardIndex + 1} / ${source.length}`;
   cardWord.textContent = currentWord.word;
   cardTranslation.textContent = `Перевод: ${currentWord.translation}`;
   cardExampleDe.textContent = currentWord.example_de;
@@ -128,7 +135,9 @@ function updateWordStatus(status) {
 }
 
 function showPrevCard() {
-  if (words.length === 0) return;
+  const source = isFilteredMode ? filteredWords : words;
+
+  if (source.length === 0) return;
 
   if (currentCardIndex > 0) {
     currentCardIndex--;
@@ -137,9 +146,11 @@ function showPrevCard() {
 }
 
 function showNextCard() {
-  if (words.length === 0) return;
+  const source = isFilteredMode ? filteredWords : words;
 
-  if (currentCardIndex < words.length - 1) {
+  if (source.length === 0) return;
+
+  if (currentCardIndex < source.length - 1) {
     currentCardIndex++;
     showCard();
   }
@@ -159,6 +170,19 @@ function markWordAsUnknown() {
   words[currentCardIndex].status = "unknown";
   updateWordStatus("unknown");
   saveProgress(daySelect.value, words);
+}
+
+function repeatUnknownWords() {
+  filteredWords = words.filter((word) => word.status === "unknown");
+
+  if (filteredWords.length === 0) {
+    alert("Нет сложных слов 🎉");
+    return;
+  }
+
+  isFilteredMode = true;
+  currentCardIndex = 0;
+  showCard();
 }
 
 function switchMode(mode) {
@@ -309,6 +333,7 @@ knowBtn.addEventListener("click", markWordAsKnown);
 dontKnowBtn.addEventListener("click", markWordAsUnknown);
 
 loadBtn.addEventListener("click", loadWords);
+repeatUnknownBtn.addEventListener("click", repeatUnknownWords);
 
 cardsModeBtn.addEventListener("click", () => switchMode("cards"));
 testModeBtn.addEventListener("click", () => switchMode("test"));
