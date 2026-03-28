@@ -8,162 +8,273 @@
 </head>
 
 <body>
-  <div class="container">
-    <h1>German B2 Beruf Trainer</h1>
-    <p class="small-text">Тренажёр слов (B2 Beruf)</p>
-
-    <!-- ЗАГРУЗКА -->
-    <div class="panel">
-      <div class="controls">
-        <select id="daySelect">
-          <option value="tag1">Tag 1</option>
-          <option value="tag2">Tag 2</option>
-          <option value="tag3">Tag 3</option>
-        </select>
-
-        <button id="loadBtn">Загрузить</button>
-        <button id="repeatUnknownBtn">Сложные</button>
-      </div>
-
-      <div class="mode-buttons">
-        <button id="cardsModeBtn" class="active">📇 Карточки</button>
-        <button id="testModeBtn">📝 Тест</button>
-        <button id="presentationModeBtn">🎬 Режим презентации</button>
-      </div>
-    </div>
-
-    <!-- КАРТОЧКИ -->
-    <div id="cardsSection" class="panel">
-
-      <div id="cardsCounter" class="question-count"></div>
-
-      <div class="word-container">
-        <div id="cardWord" class="word"></div>
-        <button id="speakCardBtn" class="speak-btn" title="Озвучить">🔊</button>
-      </div>
-
-      <div id="cardAnswer" class="hidden">
-        <div id="cardTranslation" class="translation"></div>
-
-        <div class="examples">
-          <p><b>DE:</b> <span id="cardExampleDe"></span></p>
-          <p><b>RU:</b> <span id="cardExampleRu"></span></p>
-        </div>
-      </div>
-
-      <!-- РЕЖИМ ВВОДА -->
-      <div id="typingSection" class="hidden">
-        <div class="typing-area">
-          <input type="text" id="typingInput" placeholder="Введите перевод..." />
-          <button id="checkTypingBtn">Проверить</button>
-        </div>
-        <div id="typingFeedback" class="typing-feedback hidden">
-          <p id="typingMessage"></p>
-          <p id="typingCorrectAnswer"></p>
-        </div>
-      </div>
-
-      <!-- ПОИСК -->
-      <div class="controls">
-        <input id="searchInput" type="text" placeholder="Поиск..." />
-        <button id="searchBtn">Найти</button>
-        <button id="resetSearchBtn">Сброс</button>
-        <button id="toggleSoundBtn" class="sound-toggle-btn">🔊 Звук вкл</button>
-      </div>
-
-      <!-- ФИЛЬТРЫ -->
-      <div class="controls">
-        <button id="showAllBtn">Все</button>
-        <button id="randomWordBtn">Случайное</button>
-
-        <label>
-          <input id="autoNextCheckbox" type="checkbox" checked />
-          Автопереход
-        </label>
-      </div>
-
-      <!-- УПРАВЛЕНИЕ -->
-      <div class="nav-buttons">
-        <select id="cardModeSelect">
-          <option value="de-to-ru">DE → RU</option>
-          <option value="ru-to-de">RU → DE</option>
-        </select>
-
-        <button id="typingModeBtn" class="typing-btn">✏️ Режим ввода</button>
-
-        <button id="showAnswerBtn">Ответ</button>
-        <button id="prevBtn">Назад</button>
-        <button id="nextBtn">Вперёд</button>
-      </div>
-
-      <!-- ОЦЕНКА -->
-      <div class="nav-buttons">
-        <button id="knowBtn">Знаю</button>
-        <button id="dontKnowBtn">Не знаю</button>
-      </div>
-
-      <p id="wordStatus" class="small-text"></p>
-      <p id="statsBox" class="small-text"></p>
-    </div>
-
-    <!-- ТЕСТ -->
-    <div id="testSection" class="panel hidden">
-
-      <div id="testCounter" class="question-count"></div>
-
-      <div class="test-word-container">
-        <div id="testWord" class="word"></div>
-        <button id="speakTestBtn" class="speak-btn" title="Озвучить">🔊</button>
-      </div>
-
-      <div id="answersContainer" class="answers"></div>
-
-      <p id="testMessage"></p>
-
-      <div class="nav-buttons">
-        <button id="nextQuestionBtn" class="hidden">Дальше</button>
-        <button id="restartTestBtn" class="hidden">Заново</button>
-      </div>
-
-      <div id="resultBox" class="small-text"></div>
-    </div>
-
-    <!-- РЕЖИМ ПРЕЗЕНТАЦИИ -->
-    <div id="presentationSection" class="presentation-panel hidden">
-      <button id="presentationExitBtn" class="presentation-exit-btn">✕ Выход</button>
-      <button id="presentationPauseBtn" class="presentation-control-btn pause-btn">⏸ Пауза</button>
-      <button id="presentationStopBtn" class="presentation-control-btn stop-btn">⏹ Остановить</button>
-      
-      <!-- Боковая панель со списком слов -->
-      <div id="presentationSidebar" class="presentation-sidebar">
-        <div class="sidebar-header">
-          <h3>📚 Список слов</h3>
-          <button id="toggleSidebarBtn" class="toggle-sidebar-btn" title="Скрыть панель">◀</button>
-        </div>
-        <div id="wordsList" class="words-list"></div>
-      </div>
-      
-      <!-- Основной контейнер для контента презентации -->
-      <div id="presentationMain" class="presentation-main">
-        <div id="presentationContent" class="presentation-content">
-          <div id="presentationCounter" class="presentation-counter"></div>
-          
-          <div class="presentation-word-container">
-            <div id="presentationWord" class="presentation-word"></div>
-            <button id="speakPresentationBtn" class="presentation-speak-btn" title="Озвучить">🔊</button>
+  <!-- ГЛАВНАЯ СТРАНИЦА-ДАШБОРД -->
+  <div id="dashboard" class="dashboard">
+    <div class="dashboard-container">
+      <!-- ШАПКА -->
+      <header class="dashboard-header">
+        <div class="logo-area">
+          <span class="logo">🇩🇪</span>
+          <div>
+            <h1>German B2 Beruf Trainer</h1>
+            <p class="subtitle">Тренажёр для изучения профессиональной немецкой лексики</p>
           </div>
-          
-          <div id="presentationTranslation" class="presentation-translation"></div>
-          <div id="presentationExamples" class="presentation-examples">
-            <p><span class="example-label">DE:</span> <span id="presentationExampleDe"></span></p>
-            <p><span class="example-label">RU:</span> <span id="presentationExampleRu"></span></p>
+        </div>
+      </header>
+
+      <!-- СТАТИСТИКА ПРОГРЕССА -->
+      <div class="stats-overview">
+        <div class="stat-card">
+          <div class="stat-icon">📚</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statTotal">0</span>
+            <span class="stat-label">Всего слов</span>
+          </div>
+        </div>
+        <div class="stat-card known">
+          <div class="stat-icon">✅</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statKnown">0</span>
+            <span class="stat-label">Знаю</span>
+          </div>
+        </div>
+        <div class="stat-card unknown">
+          <div class="stat-icon">📖</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statUnknown">0</span>
+            <span class="stat-label">Учу</span>
+          </div>
+        </div>
+        <div class="stat-card progress">
+          <div class="stat-icon">📈</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statProgress">0%</span>
+            <span class="stat-label">Прогресс</span>
           </div>
         </div>
       </div>
-      
-      <div class="presentation-progress">
-        <div id="presentationProgressBar" class="presentation-progress-bar"></div>
+
+      <!-- ВЫБОР НАБОРА СЛОВ -->
+      <div class="day-selector">
+        <div class="selector-label">
+          <span class="label-icon">📂</span>
+          <span>Выберите набор слов</span>
+        </div>
+        <div class="day-buttons">
+          <button class="day-btn" data-day="tag1">Tag 1 <span>Глаголы с Dativ/Genitiv</span></button>
+          <button class="day-btn" data-day="tag2">Tag 2 <span>Глаголы с управлением</span></button>
+          <button class="day-btn" data-day="tag3">Tag 3 <span>Продвинутая лексика</span></button>
+        </div>
+        <div class="selected-day-info" id="selectedDayInfo">
+          <span>📌 Выбран: <strong id="currentDayName">Tag 1</strong></span>
+          <button id="loadBtn" class="load-btn">Загрузить слова</button>
+        </div>
       </div>
+
+      <!-- КАРТОЧКИ РЕЖИМОВ -->
+      <div class="modes-grid">
+        <div class="mode-card" data-mode="cards">
+          <div class="mode-icon">📇</div>
+          <h3>Карточки</h3>
+          <p>Классические карточки. Смотрите слово, вспоминайте перевод.</p>
+          <div class="mode-features">
+            <span>🔄 DE ↔ RU</span>
+            <span>👍 Знаю / Не знаю</span>
+            <span>🔊 Озвучивание</span>
+          </div>
+          <button class="mode-start-btn" data-mode="cards">
+            Начать <span>→</span>
+          </button>
+        </div>
+
+        <div class="mode-card" data-mode="typing">
+          <div class="mode-icon">✏️</div>
+          <h3>Режим ввода</h3>
+          <p>Активное запоминание. Введите перевод самостоятельно.</p>
+          <div class="mode-features">
+            <span>⌨️ Ручной ввод</span>
+            <span>✅ Автопроверка</span>
+            <span>📈 Эффективность</span>
+          </div>
+          <button class="mode-start-btn" data-mode="typing">
+            Начать <span>→</span>
+          </button>
+        </div>
+
+        <div class="mode-card" data-mode="test">
+          <div class="mode-icon">📝</div>
+          <h3>Тест</h3>
+          <p>Проверьте знания. Выберите правильный перевод из 4 вариантов.</p>
+          <div class="mode-features">
+            <span>🔢 4 варианта</span>
+            <span>📊 Результат</span>
+            <span>🔄 Случайный порядок</span>
+          </div>
+          <button class="mode-start-btn" data-mode="test">
+            Начать <span>→</span>
+          </button>
+        </div>
+
+        <div class="mode-card" data-mode="presentation">
+          <div class="mode-icon">🎬</div>
+          <h3>Презентация</h3>
+          <p>Автоматический показ слов. Идеально для повторения.</p>
+          <div class="mode-features">
+            <span>⏱️ 11 сек/слово</span>
+            <span>🔊 Автоозвучка</span>
+            <span>📋 Список слов</span>
+          </div>
+          <button class="mode-start-btn" data-mode="presentation">
+            Начать <span>→</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ -->
+      <div class="extra-functions">
+        <button class="extra-btn" id="repeatUnknownBtn">
+          <span>🔄</span> Только сложные слова
+        </button>
+        <button class="extra-btn" id="randomWordBtn">
+          <span>🎲</span> Случайное слово
+        </button>
+        <div class="sound-control">
+          <button id="toggleSoundBtn" class="sound-btn">🔊 Звук вкл</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ЭКРАН КАРТОЧЕК -->
+  <div id="cardsScreen" class="mode-screen hidden">
+    <div class="mode-header">
+      <button class="back-btn" data-back>← На главную</button>
+      <h2>📇 Карточки</h2>
+      <div class="mode-controls">
+        <button id="cardsModeSelect" class="small-select">DE → RU</button>
+        <button id="cardsTypingModeBtn" class="typing-mode-btn">✏️ Режим ввода</button>
+        <button id="cardsSpeakBtn" class="speak-mode-btn">🔊</button>
+      </div>
+    </div>
+    
+    <div class="mode-content">
+      <div class="cards-container">
+        <div class="cards-counter" id="cardsCounter"></div>
+        
+        <div class="card">
+          <div class="card-word-container">
+            <div class="card-word" id="cardWord"></div>
+          </div>
+          
+          <div class="card-answer hidden" id="cardAnswer">
+            <div class="card-translation" id="cardTranslation"></div>
+            <div class="card-examples">
+              <p><span class="example-label">DE:</span> <span id="cardExampleDe"></span></p>
+              <p><span class="example-label">RU:</span> <span id="cardExampleRu"></span></p>
+            </div>
+          </div>
+          
+          <!-- Режим ввода внутри карточек -->
+          <div class="typing-area hidden" id="cardsTypingSection">
+            <input type="text" id="cardsTypingInput" placeholder="Введите перевод..." />
+            <button id="cardsCheckTypingBtn">Проверить</button>
+          </div>
+          <div class="typing-feedback hidden" id="cardsTypingFeedback">
+            <p id="cardsTypingMessage"></p>
+            <p id="cardsTypingCorrectAnswer"></p>
+          </div>
+        </div>
+        
+        <div class="card-controls">
+          <button id="showAnswerBtn" class="control-btn">Показать ответ</button>
+          <div class="nav-controls">
+            <button id="prevBtn" class="nav-btn">◀ Назад</button>
+            <button id="nextBtn" class="nav-btn">Вперёд ▶</button>
+          </div>
+        </div>
+        
+        <div class="rating-buttons">
+          <button id="knowBtn" class="rating-btn know">✅ Знаю</button>
+          <button id="dontKnowBtn" class="rating-btn dontknow">❌ Не знаю</button>
+        </div>
+        
+        <div class="card-footer">
+          <label class="auto-next">
+            <input type="checkbox" id="autoNextCheckbox" checked />
+            Автопереход
+          </label>
+          <div class="word-status" id="wordStatus">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ЭКРАН ТЕСТА -->
+  <div id="testScreen" class="mode-screen hidden">
+    <div class="mode-header">
+      <button class="back-btn" data-back>← На главную</button>
+      <h2>📝 Тест</h2>
+      <button id="testSpeakBtn" class="speak-mode-btn">🔊</button>
+    </div>
+    
+    <div class="mode-content">
+      <div class="test-container">
+        <div class="test-counter" id="testCounter"></div>
+        
+        <div class="test-question">
+          <div class="test-word" id="testWord"></div>
+        </div>
+        
+        <div class="answers-grid" id="answersContainer"></div>
+        
+        <div class="test-message" id="testMessage"></div>
+        
+        <div class="test-controls">
+          <button id="nextQuestionBtn" class="hidden">Следующий вопрос →</button>
+          <button id="restartTestBtn" class="hidden">🔄 Пройти заново</button>
+        </div>
+        
+        <div class="test-result" id="resultBox"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ЭКРАН ПРЕЗЕНТАЦИИ (полноэкранный) -->
+  <div id="presentationScreen" class="presentation-panel hidden">
+    <div class="presentation-top-bar">
+      <button class="back-btn-light" data-back>← На главную</button>
+      <button id="presentationPauseBtn" class="presentation-control-light">⏸ Пауза</button>
+      <button id="presentationSpeakBtn" class="presentation-speak-light">🔊</button>
+    </div>
+    
+    <button id="toggleSidebarBtn" class="sidebar-toggle-btn" title="Показать/скрыть список слов">📚</button>
+    
+    <div id="presentationSidebar" class="presentation-sidebar">
+      <div class="sidebar-header">
+        <h3>📚 Список слов</h3>
+      </div>
+      <div id="wordsList" class="words-list"></div>
+    </div>
+    
+    <div id="presentationMain" class="presentation-main">
+      <div class="presentation-content">
+        <div id="presentationCounter" class="presentation-counter"></div>
+        
+        <div class="presentation-word-container">
+          <div id="presentationWord" class="presentation-word"></div>
+        </div>
+        
+        <div id="presentationTranslation" class="presentation-translation"></div>
+        
+        <div id="presentationExamples" class="presentation-examples">
+          <p><span class="example-label">DE:</span> <span id="presentationExampleDe"></span></p>
+          <p><span class="example-label">RU:</span> <span id="presentationExampleRu"></span></p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="presentation-progress">
+      <div id="presentationProgressBar" class="presentation-progress-bar"></div>
     </div>
   </div>
 

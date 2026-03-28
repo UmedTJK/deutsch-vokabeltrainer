@@ -1,41 +1,43 @@
-const daySelect = document.getElementById("daySelect");
+// ========== DOM ЭЛЕМЕНТЫ ==========
+// Главная страница
+const dashboard = document.getElementById("dashboard");
 const loadBtn = document.getElementById("loadBtn");
-
 const repeatUnknownBtn = document.getElementById("repeatUnknownBtn");
-const showAllBtn = document.getElementById("showAllBtn");
 const randomWordBtn = document.getElementById("randomWordBtn");
+const toggleSoundBtn = document.getElementById("toggleSoundBtn");
+const dayBtns = document.querySelectorAll(".day-btn");
+const currentDayName = document.getElementById("currentDayName");
 
-const searchInput = document.getElementById("searchInput");
-const searchBtn = document.getElementById("searchBtn");
-const resetSearchBtn = document.getElementById("resetSearchBtn");
+// Экраны режимов
+const cardsScreen = document.getElementById("cardsScreen");
+const testScreen = document.getElementById("testScreen");
+const presentationScreen = document.getElementById("presentationScreen");
 
-const autoNextCheckbox = document.getElementById("autoNextCheckbox");
-
-const cardsModeBtn = document.getElementById("cardsModeBtn");
-const testModeBtn = document.getElementById("testModeBtn");
-const presentationModeBtn = document.getElementById("presentationModeBtn");
-
-const cardsSection = document.getElementById("cardsSection");
-const testSection = document.getElementById("testSection");
-const presentationSection = document.getElementById("presentationSection");
-
+// Элементы карточек
 const cardsCounter = document.getElementById("cardsCounter");
 const cardWord = document.getElementById("cardWord");
 const cardAnswer = document.getElementById("cardAnswer");
 const cardTranslation = document.getElementById("cardTranslation");
 const cardExampleDe = document.getElementById("cardExampleDe");
 const cardExampleRu = document.getElementById("cardExampleRu");
-const statsBox = document.getElementById("statsBox");
-const cardModeSelect = document.getElementById("cardModeSelect");
-
 const showAnswerBtn = document.getElementById("showAnswerBtn");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
-
 const knowBtn = document.getElementById("knowBtn");
 const dontKnowBtn = document.getElementById("dontKnowBtn");
 const wordStatus = document.getElementById("wordStatus");
+const autoNextCheckbox = document.getElementById("autoNextCheckbox");
+const cardsModeSelect = document.getElementById("cardsModeSelect");
+const cardsTypingModeBtn = document.getElementById("cardsTypingModeBtn");
+const cardsTypingSection = document.getElementById("cardsTypingSection");
+const cardsTypingInput = document.getElementById("cardsTypingInput");
+const cardsCheckTypingBtn = document.getElementById("cardsCheckTypingBtn");
+const cardsTypingFeedback = document.getElementById("cardsTypingFeedback");
+const cardsTypingMessage = document.getElementById("cardsTypingMessage");
+const cardsTypingCorrectAnswer = document.getElementById("cardsTypingCorrectAnswer");
+const cardsSpeakBtn = document.getElementById("cardsSpeakBtn");
 
+// Элементы теста
 const testCounter = document.getElementById("testCounter");
 const testWord = document.getElementById("testWord");
 const answersContainer = document.getElementById("answersContainer");
@@ -43,17 +45,9 @@ const testMessage = document.getElementById("testMessage");
 const nextQuestionBtn = document.getElementById("nextQuestionBtn");
 const restartTestBtn = document.getElementById("restartTestBtn");
 const resultBox = document.getElementById("resultBox");
+const testSpeakBtn = document.getElementById("testSpeakBtn");
 
-// Элементы режима ввода
-const typingModeBtn = document.getElementById("typingModeBtn");
-const typingSection = document.getElementById("typingSection");
-const typingInput = document.getElementById("typingInput");
-const checkTypingBtn = document.getElementById("checkTypingBtn");
-const typingFeedback = document.getElementById("typingFeedback");
-const typingMessage = document.getElementById("typingMessage");
-const typingCorrectAnswer = document.getElementById("typingCorrectAnswer");
-
-// Элементы режима презентации
+// Элементы презентации
 const presentationWord = document.getElementById("presentationWord");
 const presentationTranslation = document.getElementById("presentationTranslation");
 const presentationExamples = document.getElementById("presentationExamples");
@@ -61,20 +55,20 @@ const presentationExampleDe = document.getElementById("presentationExampleDe");
 const presentationExampleRu = document.getElementById("presentationExampleRu");
 const presentationCounter = document.getElementById("presentationCounter");
 const presentationProgressBar = document.getElementById("presentationProgressBar");
-const presentationExitBtn = document.getElementById("presentationExitBtn");
 const presentationPauseBtn = document.getElementById("presentationPauseBtn");
-const presentationStopBtn = document.getElementById("presentationStopBtn");
+const presentationSpeakBtn = document.getElementById("presentationSpeakBtn");
 const presentationSidebar = document.getElementById("presentationSidebar");
 const toggleSidebarBtn = document.getElementById("toggleSidebarBtn");
 const wordsListContainer = document.getElementById("wordsList");
 const presentationMain = document.getElementById("presentationMain");
 
-// Элементы аудио
-const speakCardBtn = document.getElementById("speakCardBtn");
-const speakPresentationBtn = document.getElementById("speakPresentationBtn");
-const speakTestBtn = document.getElementById("speakTestBtn");
-const toggleSoundBtn = document.getElementById("toggleSoundBtn");
+// Элементы статистики
+const statTotal = document.getElementById("statTotal");
+const statKnown = document.getElementById("statKnown");
+const statUnknown = document.getElementById("statUnknown");
+const statProgress = document.getElementById("statProgress");
 
+// ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
 const STORAGE_KEY = "germanTrainerProgress";
 
 let words = [];
@@ -89,11 +83,9 @@ let currentTestIndex = 0;
 let score = 0;
 let answered = false;
 
-// Переменные для режима ввода
 let typingModeActive = false;
 let currentCorrectAnswer = "";
 
-// Переменные для режима презентации
 let presentationModeActive = false;
 let presentationWordsList = [];
 let presentationCurrentIndex = 0;
@@ -102,11 +94,13 @@ let presentationInterval = 11000;
 let presentationPaused = false;
 let presentationAnimationFrame = null;
 
-// Переменные для аудио
 let soundEnabled = true;
 let speechSynthesis = window.speechSynthesis;
 let currentUtterance = null;
 
+let currentDay = "tag1";
+
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 function shuffleArray(array) {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -135,61 +129,87 @@ function loadProgress(day, words) {
   }));
 }
 
+function updateDashboardStats() {
+  if (!words.length) {
+    statTotal.textContent = "0";
+    statKnown.textContent = "0";
+    statUnknown.textContent = "0";
+    statProgress.textContent = "0%";
+    return;
+  }
+
+  const total = words.length;
+  const known = words.filter(w => w.status === "known").length;
+  const unknown = words.filter(w => w.status === "unknown").length;
+  const progress = Math.round((known / total) * 100);
+
+  statTotal.textContent = total;
+  statKnown.textContent = known;
+  statUnknown.textContent = unknown;
+  statProgress.textContent = `${progress}%`;
+}
+
+// ========== ЗАГРУЗКА СЛОВ ==========
 async function loadWords() {
-  const filePath = `data/${daySelect.value}.json`;
+  const filePath = `data/${currentDay}.json`;
 
   try {
     const res = await fetch(filePath);
     const data = await res.json();
 
     words = data.map(w => ({ ...w, status: null }));
-    words = loadProgress(daySelect.value, words);
+    words = loadProgress(currentDay, words);
     words = shuffleArray(words);
 
     isFilteredMode = false;
     filteredWords = [];
     currentSearchTerm = "";
-    searchInput.value = "";
     currentCardIndex = 0;
     
     if (typingModeActive) {
       toggleTypingMode();
     }
 
-    showCard();
+    updateDashboardStats();
     createTestQuestions();
     resetTestUI();
 
+    alert(`Загружено ${words.length} слов из ${currentDay.toUpperCase()}`);
+
   } catch (e) {
-    alert("Ошибка загрузки");
+    alert("Ошибка загрузки слов. Проверьте наличие файла data/" + currentDay + ".json");
   }
 }
 
-function updateWordStatus(status) {
-  if (status === "known") wordStatus.textContent = "Знаю";
-  else if (status === "unknown") wordStatus.textContent = "Не знаю";
-  else wordStatus.textContent = "—";
+// ========== УПРАВЛЕНИЕ ЭКРАНАМИ ==========
+function showScreen(screenName) {
+  dashboard.classList.add("hidden");
+  cardsScreen.classList.add("hidden");
+  testScreen.classList.add("hidden");
+  presentationScreen.classList.add("hidden");
+
+  if (screenName === "dashboard") {
+    dashboard.classList.remove("hidden");
+    updateDashboardStats();
+  } else if (screenName === "cards") {
+    cardsScreen.classList.remove("hidden");
+    showCard();
+  } else if (screenName === "test") {
+    testScreen.classList.remove("hidden");
+    if (testQuestions.length) resetTestUI();
+  } else if (screenName === "presentation") {
+    presentationScreen.classList.remove("hidden");
+    startPresentationMode();
+  }
 }
 
-function updateStats() {
-  const source = isFilteredMode ? filteredWords : words;
-  let k = 0, u = 0, n = 0;
-
-  source.forEach(w => {
-    if (w.status === "known") k++;
-    else if (w.status === "unknown") u++;
-    else n++;
-  });
-
-  statsBox.textContent = `✅ ${k} | ❌ ${u} | ⚪ ${n}`;
-}
-
+// ========== КАРТОЧКИ ==========
 function showCard() {
   const source = isFilteredMode ? filteredWords : words;
 
   if (!source.length) {
     cardWord.textContent = "Нет слов";
-    updateStats();
+    updateDashboardStats();
     return;
   }
 
@@ -210,11 +230,17 @@ function showCard() {
 
   updateWordStatus(w.status);
   cardAnswer.classList.add("hidden");
-  updateStats();
+  updateDashboardStats();
   
   if (typingModeActive) {
     prepareTypingMode();
   }
+}
+
+function updateWordStatus(status) {
+  if (status === "known") wordStatus.textContent = "Знаю";
+  else if (status === "unknown") wordStatus.textContent = "Не знаю";
+  else wordStatus.textContent = "—";
 }
 
 function showNextCard() {
@@ -237,8 +263,8 @@ function markWord(status) {
   if (!source.length) return;
 
   source[currentCardIndex].status = status;
-  saveProgress(daySelect.value, words);
-  updateStats();
+  saveProgress(currentDay, words);
+  updateDashboardStats();
 
   if (autoNextCheckbox.checked && !typingModeActive) showNextCard();
 }
@@ -249,32 +275,7 @@ function repeatUnknownWords() {
   isFilteredMode = true;
   currentCardIndex = 0;
   showCard();
-}
-
-function showAllWords() {
-  isFilteredMode = false;
-  filteredWords = [];
-  currentCardIndex = 0;
-  showCard();
-}
-
-function searchWords() {
-  const t = searchInput.value.toLowerCase();
-  if (!t) return;
-
-  filteredWords = words.filter(w =>
-    w.word.toLowerCase().includes(t) ||
-    w.translation.toLowerCase().includes(t)
-  );
-
-  isFilteredMode = true;
-  currentCardIndex = 0;
-  showCard();
-}
-
-function resetSearch() {
-  searchInput.value = "";
-  showAllWords();
+  showScreen("cards");
 }
 
 function showRandomWord() {
@@ -283,18 +284,18 @@ function showRandomWord() {
   showCard();
 }
 
-/* РЕЖИМ ВВОДА */
+// ========== РЕЖИМ ВВОДА (ВНУТРИ КАРТОЧЕК) ==========
 function toggleTypingMode() {
   typingModeActive = !typingModeActive;
   
   if (typingModeActive) {
-    typingModeBtn.classList.add("active");
-    typingSection.classList.remove("hidden");
+    cardsTypingModeBtn.classList.add("active");
+    cardsTypingSection.classList.remove("hidden");
     cardAnswer.classList.add("hidden");
     prepareTypingMode();
   } else {
-    typingModeBtn.classList.remove("active");
-    typingSection.classList.add("hidden");
+    cardsTypingModeBtn.classList.remove("active");
+    cardsTypingSection.classList.add("hidden");
     hideTypingFeedback();
   }
 }
@@ -311,17 +312,17 @@ function prepareTypingMode() {
     currentCorrectAnswer = w.word.toLowerCase().trim();
   }
   
-  typingInput.value = "";
+  cardsTypingInput.value = "";
   hideTypingFeedback();
 }
 
 function checkTypingAnswer() {
-  const userAnswer = typingInput.value.toLowerCase().trim();
+  const userAnswer = cardsTypingInput.value.toLowerCase().trim();
   
   if (userAnswer === currentCorrectAnswer) {
-    typingFeedback.className = "typing-feedback correct";
-    typingMessage.textContent = "✅ Правильно! Отлично!";
-    typingCorrectAnswer.textContent = "";
+    cardsTypingFeedback.className = "typing-feedback correct";
+    cardsTypingMessage.textContent = "✅ Правильно! Отлично!";
+    cardsTypingCorrectAnswer.textContent = "";
     
     markWord("known");
     
@@ -332,22 +333,22 @@ function checkTypingAnswer() {
       }, 1000);
     }
   } else {
-    typingFeedback.className = "typing-feedback wrong";
-    typingMessage.textContent = "❌ Неправильно. Попробуйте ещё раз!";
-    typingCorrectAnswer.textContent = `Правильный ответ: ${currentCorrectAnswer}`;
+    cardsTypingFeedback.className = "typing-feedback wrong";
+    cardsTypingMessage.textContent = "❌ Неправильно. Попробуйте ещё раз!";
+    cardsTypingCorrectAnswer.textContent = `Правильный ответ: ${currentCorrectAnswer}`;
     
     markWord("unknown");
   }
   
-  typingFeedback.classList.remove("hidden");
+  cardsTypingFeedback.classList.remove("hidden");
 }
 
 function hideTypingFeedback() {
-  typingFeedback.classList.add("hidden");
-  typingInput.value = "";
+  cardsTypingFeedback.classList.add("hidden");
+  cardsTypingInput.value = "";
 }
 
-/* АУДИО ФУНКЦИИ */
+// ========== АУДИО ФУНКЦИИ ==========
 function speakText(text, lang = 'de-DE') {
   if (!soundEnabled) return;
   
@@ -368,30 +369,16 @@ function speakText(text, lang = 'de-DE') {
   };
 }
 
-function getCurrentWordForSpeaking() {
+function speakCardWord() {
   const source = isFilteredMode ? filteredWords : words;
-  if (!source.length) return null;
+  if (!source.length) return;
   
   const w = source[currentCardIndex];
   
   if (cardMode === "de-to-ru") {
-    return { text: w.word, lang: 'de-DE' };
-  } else {
-    return { text: w.translation, lang: 'ru-RU' };
-  }
-}
-
-function speakCardWord() {
-  const word = getCurrentWordForSpeaking();
-  if (word) {
-    speakText(word.text, word.lang);
-  }
-}
-
-function speakPresentationWord() {
-  if (presentationModeActive && presentationCurrentIndex < presentationWordsList.length) {
-    const w = presentationWordsList[presentationCurrentIndex];
     speakText(w.word, 'de-DE');
+  } else {
+    speakText(w.translation, 'ru-RU');
   }
 }
 
@@ -399,6 +386,13 @@ function speakTestWord() {
   if (testQuestions.length && currentTestIndex < testQuestions.length) {
     const q = testQuestions[currentTestIndex];
     speakText(q.word, 'de-DE');
+  }
+}
+
+function speakPresentationWord() {
+  if (presentationModeActive && presentationCurrentIndex < presentationWordsList.length) {
+    const w = presentationWordsList[presentationCurrentIndex];
+    speakText(w.word, 'de-DE');
   }
 }
 
@@ -417,296 +411,7 @@ function toggleSound() {
   }
 }
 
-/* БОКОВАЯ ПАНЕЛЬ ПРЕЗЕНТАЦИИ */
-function toggleSidebar() {
-  if (!presentationSidebar || !presentationMain) return;
-  
-  presentationSidebar.classList.toggle("collapsed");
-  const btn = toggleSidebarBtn;
-  
-  if (presentationSidebar.classList.contains("collapsed")) {
-    btn.textContent = "▶";
-    btn.title = "Показать панель";
-    presentationMain.classList.remove("with-sidebar");
-  } else {
-    btn.textContent = "◀";
-    btn.title = "Скрыть панель";
-    presentationMain.classList.add("with-sidebar");
-  }
-}
-
-function updateWordsList() {
-  if (!wordsListContainer) return;
-  
-  wordsListContainer.innerHTML = "";
-  
-  presentationWordsList.forEach((word, index) => {
-    const wordItem = document.createElement("div");
-    wordItem.className = "word-item";
-    
-    if (index === presentationCurrentIndex) {
-      wordItem.classList.add("current");
-    } else if (index < presentationCurrentIndex) {
-      wordItem.classList.add("passed");
-    }
-    
-    wordItem.innerHTML = `
-      <span class="word-number">${index + 1}.</span>
-      <span class="word-text">${word.word}</span>
-    `;
-    
-    wordItem.onclick = () => {
-      if (presentationModeActive && !presentationPaused) {
-        // Очищаем таймеры перед переходом
-        if (presentationTimer) clearTimeout(presentationTimer);
-        if (presentationAnimationFrame) cancelAnimationFrame(presentationAnimationFrame);
-        
-        presentationCurrentIndex = index;
-        showPresentationSlide();
-      }
-    };
-    
-    wordsListContainer.appendChild(wordItem);
-  });
-  
-  // Автоматически прокручиваем к текущему слову
-  const currentItem = wordsListContainer.querySelector(".word-item.current");
-  if (currentItem) {
-    currentItem.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-}
-
-/* РЕЖИМ ПРЕЗЕНТАЦИИ */
-function startPresentationMode() {
-  if (!words.length) {
-    alert("Сначала загрузите слова");
-    return;
-  }
-  
-  presentationModeActive = true;
-  presentationWordsList = [...words];
-  presentationCurrentIndex = 0;
-  presentationPaused = false;
-  
-  cardsSection.classList.add("hidden");
-  testSection.classList.add("hidden");
-  presentationSection.classList.remove("hidden");
-  
-  cardsModeBtn.classList.remove("active");
-  testModeBtn.classList.remove("active");
-  presentationModeBtn.classList.add("active");
-  
-  presentationPauseBtn.textContent = "⏸ Пауза";
-  
-  // Сбрасываем состояние боковой панели
-  if (presentationSidebar && presentationMain) {
-    // Проверяем, была ли панель скрыта
-    if (!presentationSidebar.classList.contains("collapsed")) {
-      presentationMain.classList.add("with-sidebar");
-    } else {
-      presentationMain.classList.remove("with-sidebar");
-    }
-  }
-  
-  // Обновляем список слов
-  updateWordsList();
-  
-  showPresentationSlide();
-}
-
-function showPresentationSlide() {
-  if (presentationCurrentIndex >= presentationWordsList.length) {
-    // Презентация завершена, начинаем сначала или останавливаемся
-    presentationCurrentIndex = 0;
-    updateWordsList();
-  }
-  
-  const word = presentationWordsList[presentationCurrentIndex];
-  
-  presentationCounter.textContent = `${presentationCurrentIndex + 1} / ${presentationWordsList.length}`;
-  
-  // Сброс анимаций
-  presentationTranslation.style.opacity = "0";
-  presentationExamples.style.opacity = "0";
-  presentationTranslation.textContent = "";
-  presentationExampleDe.textContent = "";
-  presentationExampleRu.textContent = "";
-  
-  presentationWord.textContent = word.word;
-  presentationWord.style.opacity = "1";
-  
-  // Обновляем список слов с подсветкой текущего
-  updateWordsList();
-  
-  // Запускаем прогресс-бар
-  startProgressBar();
-  
-  // Озвучивание слова
-  setTimeout(() => {
-    if (presentationModeActive && !presentationPaused) {
-      speakText(word.word, 'de-DE');
-    }
-  }, 500);
-  
-  // Показ перевода
-  setTimeout(() => {
-    if (presentationModeActive && !presentationPaused && presentationCurrentIndex < presentationWordsList.length) {
-      presentationTranslation.textContent = word.translation;
-      presentationTranslation.style.opacity = "1";
-    }
-  }, 1000);
-  
-  // Показ примеров
-  setTimeout(() => {
-    if (presentationModeActive && !presentationPaused && presentationCurrentIndex < presentationWordsList.length) {
-      presentationExampleDe.textContent = word.example_de;
-      presentationExampleRu.textContent = word.example_ru;
-      presentationExamples.style.opacity = "1";
-    }
-  }, 2000);
-  
-  // Очищаем предыдущий таймер
-  if (presentationTimer) clearTimeout(presentationTimer);
-  
-  // Устанавливаем таймер для следующего слова
-  presentationTimer = setTimeout(() => {
-    if (presentationModeActive && !presentationPaused) {
-      presentationCurrentIndex++;
-      showPresentationSlide();
-    }
-  }, presentationInterval);
-}
-
-function startProgressBar() {
-  let startTime = Date.now();
-  const duration = presentationInterval;
-  
-  // Очищаем предыдущую анимацию
-  if (presentationAnimationFrame) {
-    cancelAnimationFrame(presentationAnimationFrame);
-    presentationAnimationFrame = null;
-  }
-  
-  function updateProgress() {
-    if (!presentationModeActive || presentationPaused) {
-      // Если на паузе, продолжаем запрашивать кадры, но не обновляем прогресс
-      presentationAnimationFrame = requestAnimationFrame(updateProgress);
-      return;
-    }
-    
-    const elapsed = Date.now() - startTime;
-    const percent = Math.min((elapsed / duration) * 100, 100);
-    presentationProgressBar.style.width = `${percent}%`;
-    
-    if (percent < 100) {
-      presentationAnimationFrame = requestAnimationFrame(updateProgress);
-    } else {
-      presentationAnimationFrame = null;
-    }
-  }
-  
-  presentationAnimationFrame = requestAnimationFrame(updateProgress);
-}
-
-function pausePresentation() {
-  if (!presentationModeActive) return;
-  
-  presentationPaused = !presentationPaused;
-  
-  if (presentationPaused) {
-    presentationPauseBtn.textContent = "▶ Старт";
-    if (presentationTimer) {
-      clearTimeout(presentationTimer);
-      presentationTimer = null;
-    }
-    // Анимация прогресс-бара останавливается, но requestAnimationFrame продолжает работать
-    // с проверкой presentationPaused, поэтому прогресс не обновляется
-  } else {
-    presentationPauseBtn.textContent = "⏸ Пауза";
-    
-    // Вычисляем оставшееся время на основе текущей ширины прогресс-бара
-    const currentWidth = parseFloat(presentationProgressBar.style.width) || 0;
-    const remainingPercent = 100 - currentWidth;
-    const remainingTime = (remainingPercent / 100) * presentationInterval;
-    
-    // Перезапускаем прогресс-бар с оставшегося времени
-    const startTime = Date.now();
-    const duration = remainingTime;
-    
-    if (presentationAnimationFrame) {
-      cancelAnimationFrame(presentationAnimationFrame);
-    }
-    
-    function resumeProgress() {
-      if (!presentationModeActive || presentationPaused) {
-        presentationAnimationFrame = requestAnimationFrame(resumeProgress);
-        return;
-      }
-      
-      const elapsed = Date.now() - startTime;
-      const percent = Math.min((elapsed / duration) * 100, 100);
-      const newWidth = currentWidth + percent;
-      presentationProgressBar.style.width = `${Math.min(newWidth, 100)}%`;
-      
-      if (percent < 100) {
-        presentationAnimationFrame = requestAnimationFrame(resumeProgress);
-      } else {
-        presentationAnimationFrame = null;
-      }
-    }
-    
-    presentationAnimationFrame = requestAnimationFrame(resumeProgress);
-    
-    // Перезапускаем таймер
-    presentationTimer = setTimeout(() => {
-      if (presentationModeActive && !presentationPaused) {
-        presentationCurrentIndex++;
-        showPresentationSlide();
-      }
-    }, remainingTime);
-  }
-}
-
-function stopPresentation() {
-  if (!presentationModeActive) return;
-  
-  if (confirm("Остановить презентацию и вернуться к карточкам?")) {
-    // Очищаем все таймеры
-    if (presentationTimer) {
-      clearTimeout(presentationTimer);
-      presentationTimer = null;
-    }
-    if (presentationAnimationFrame) {
-      cancelAnimationFrame(presentationAnimationFrame);
-      presentationAnimationFrame = null;
-    }
-    
-    presentationModeActive = false;
-    switchToCards();
-  }
-}
-
-function exitPresentation() {
-  // Очищаем все таймеры
-  if (presentationTimer) {
-    clearTimeout(presentationTimer);
-    presentationTimer = null;
-  }
-  if (presentationAnimationFrame) {
-    cancelAnimationFrame(presentationAnimationFrame);
-    presentationAnimationFrame = null;
-  }
-  
-  // Сбрасываем состояние боковой панели
-  if (presentationMain) {
-    presentationMain.classList.remove("with-sidebar");
-  }
-  
-  presentationModeActive = false;
-  switchToCards();
-}
-
-/* ТЕСТ */
+// ========== ТЕСТ ==========
 function createTestQuestions() {
   testQuestions = words.map(w => ({
     word: w.word,
@@ -797,76 +502,322 @@ function restartTest() {
   resetTestUI();
 }
 
-/* ПЕРЕКЛЮЧЕНИЕ МЕЖДУ РЕЖИМАМИ */
-function switchToCards() {
-  cardsSection.classList.remove("hidden");
-  testSection.classList.add("hidden");
-  presentationSection.classList.add("hidden");
-  cardsModeBtn.classList.add("active");
-  testModeBtn.classList.remove("active");
-  presentationModeBtn.classList.remove("active");
+// ========== РЕЖИМ ПРЕЗЕНТАЦИИ ==========
+function startPresentationMode() {
+  if (!words.length) {
+    alert("Сначала загрузите слова");
+    showScreen("dashboard");
+    return;
+  }
+  
+  presentationModeActive = true;
+  presentationWordsList = [...words];
+  presentationCurrentIndex = 0;
+  presentationPaused = false;
+  
+  presentationPauseBtn.textContent = "⏸ Пауза";
+  
+  if (presentationSidebar && presentationMain) {
+    if (!presentationSidebar.classList.contains("collapsed")) {
+      presentationMain.classList.add("with-sidebar");
+    } else {
+      presentationMain.classList.remove("with-sidebar");
+    }
+  }
+  
+  updateWordsList();
+  showPresentationSlide();
 }
 
-function switchToTest() {
-  cardsSection.classList.add("hidden");
-  testSection.classList.remove("hidden");
-  presentationSection.classList.add("hidden");
-  testModeBtn.classList.add("active");
-  cardsModeBtn.classList.remove("active");
-  presentationModeBtn.classList.remove("active");
+function updateWordsList() {
+  if (!wordsListContainer) return;
   
-  if (testQuestions.length) {
-    resetTestUI();
+  wordsListContainer.innerHTML = "";
+  
+  presentationWordsList.forEach((word, index) => {
+    const wordItem = document.createElement("div");
+    wordItem.className = "word-item";
+    
+    if (index === presentationCurrentIndex) {
+      wordItem.classList.add("current");
+    } else if (index < presentationCurrentIndex) {
+      wordItem.classList.add("passed");
+    }
+    
+    wordItem.innerHTML = `
+      <span class="word-number">${index + 1}.</span>
+      <span class="word-text">${word.word}</span>
+    `;
+    
+    wordItem.onclick = () => {
+      if (presentationModeActive && !presentationPaused) {
+        if (presentationTimer) clearTimeout(presentationTimer);
+        if (presentationAnimationFrame) cancelAnimationFrame(presentationAnimationFrame);
+        
+        presentationCurrentIndex = index;
+        showPresentationSlide();
+      }
+    };
+    
+    wordsListContainer.appendChild(wordItem);
+  });
+  
+  const currentItem = wordsListContainer.querySelector(".word-item.current");
+  if (currentItem) {
+    currentItem.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 }
 
-/* EVENTS */
-loadBtn.onclick = loadWords;
-showAnswerBtn.onclick = () => cardAnswer.classList.remove("hidden");
+function showPresentationSlide() {
+  if (presentationCurrentIndex >= presentationWordsList.length) {
+    presentationCurrentIndex = 0;
+    updateWordsList();
+  }
+  
+  const word = presentationWordsList[presentationCurrentIndex];
+  
+  presentationCounter.textContent = `${presentationCurrentIndex + 1} / ${presentationWordsList.length}`;
+  
+  presentationTranslation.style.opacity = "0";
+  presentationExamples.style.opacity = "0";
+  presentationTranslation.textContent = "";
+  presentationExampleDe.textContent = "";
+  presentationExampleRu.textContent = "";
+  
+  presentationWord.textContent = word.word;
+  presentationWord.style.opacity = "1";
+  
+  updateWordsList();
+  startProgressBar();
+  
+  setTimeout(() => {
+    if (presentationModeActive && !presentationPaused) {
+      speakText(word.word, 'de-DE');
+    }
+  }, 500);
+  
+  setTimeout(() => {
+    if (presentationModeActive && !presentationPaused && presentationCurrentIndex < presentationWordsList.length) {
+      presentationTranslation.textContent = word.translation;
+      presentationTranslation.style.opacity = "1";
+    }
+  }, 1000);
+  
+  setTimeout(() => {
+    if (presentationModeActive && !presentationPaused && presentationCurrentIndex < presentationWordsList.length) {
+      presentationExampleDe.textContent = word.example_de;
+      presentationExampleRu.textContent = word.example_ru;
+      presentationExamples.style.opacity = "1";
+    }
+  }, 2000);
+  
+  if (presentationTimer) clearTimeout(presentationTimer);
+  
+  presentationTimer = setTimeout(() => {
+    if (presentationModeActive && !presentationPaused) {
+      presentationCurrentIndex++;
+      showPresentationSlide();
+    }
+  }, presentationInterval);
+}
 
+function startProgressBar() {
+  let startTime = Date.now();
+  const duration = presentationInterval;
+  
+  if (presentationAnimationFrame) {
+    cancelAnimationFrame(presentationAnimationFrame);
+    presentationAnimationFrame = null;
+  }
+  
+  function updateProgress() {
+    if (!presentationModeActive || presentationPaused) {
+      presentationAnimationFrame = requestAnimationFrame(updateProgress);
+      return;
+    }
+    
+    const elapsed = Date.now() - startTime;
+    const percent = Math.min((elapsed / duration) * 100, 100);
+    presentationProgressBar.style.width = `${percent}%`;
+    
+    if (percent < 100) {
+      presentationAnimationFrame = requestAnimationFrame(updateProgress);
+    } else {
+      presentationAnimationFrame = null;
+    }
+  }
+  
+  presentationAnimationFrame = requestAnimationFrame(updateProgress);
+}
+
+function pausePresentation() {
+  if (!presentationModeActive) return;
+  
+  presentationPaused = !presentationPaused;
+  
+  if (presentationPaused) {
+    presentationPauseBtn.textContent = "▶ Старт";
+    if (presentationTimer) {
+      clearTimeout(presentationTimer);
+      presentationTimer = null;
+    }
+  } else {
+    presentationPauseBtn.textContent = "⏸ Пауза";
+    
+    const currentWidth = parseFloat(presentationProgressBar.style.width) || 0;
+    const remainingPercent = 100 - currentWidth;
+    const remainingTime = (remainingPercent / 100) * presentationInterval;
+    
+    const startTime = Date.now();
+    const duration = remainingTime;
+    
+    if (presentationAnimationFrame) {
+      cancelAnimationFrame(presentationAnimationFrame);
+    }
+    
+    function resumeProgress() {
+      if (!presentationModeActive || presentationPaused) {
+        presentationAnimationFrame = requestAnimationFrame(resumeProgress);
+        return;
+      }
+      
+      const elapsed = Date.now() - startTime;
+      const percent = Math.min((elapsed / duration) * 100, 100);
+      const newWidth = currentWidth + percent;
+      presentationProgressBar.style.width = `${Math.min(newWidth, 100)}%`;
+      
+      if (percent < 100) {
+        presentationAnimationFrame = requestAnimationFrame(resumeProgress);
+      } else {
+        presentationAnimationFrame = null;
+      }
+    }
+    
+    presentationAnimationFrame = requestAnimationFrame(resumeProgress);
+    
+    presentationTimer = setTimeout(() => {
+      if (presentationModeActive && !presentationPaused) {
+        presentationCurrentIndex++;
+        showPresentationSlide();
+      }
+    }, remainingTime);
+  }
+}
+
+function exitPresentation() {
+  if (presentationTimer) {
+    clearTimeout(presentationTimer);
+    presentationTimer = null;
+  }
+  if (presentationAnimationFrame) {
+    cancelAnimationFrame(presentationAnimationFrame);
+    presentationAnimationFrame = null;
+  }
+  
+  if (presentationMain) {
+    presentationMain.classList.remove("with-sidebar");
+  }
+  
+  presentationModeActive = false;
+  showScreen("dashboard");
+}
+
+function toggleSidebar() {
+  if (!presentationSidebar || !presentationMain) return;
+  
+  presentationSidebar.classList.toggle("collapsed");
+  
+  if (presentationSidebar.classList.contains("collapsed")) {
+    presentationMain.classList.remove("with-sidebar");
+  } else {
+    presentationMain.classList.add("with-sidebar");
+  }
+}
+
+// ========== ВЫБОР ДНЯ ==========
+dayBtns.forEach(btn => {
+  btn.addEventListener("click", () => {
+    dayBtns.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentDay = btn.getAttribute("data-day");
+    const dayName = btn.textContent.split(" ")[0];
+    currentDayName.textContent = dayName;
+  });
+});
+
+// ========== ЗАПУСК РЕЖИМОВ С ГЛАВНОЙ ==========
+document.querySelectorAll(".mode-start-btn").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    if (!words.length) {
+      alert("Сначала загрузите слова!");
+      return;
+    }
+    
+    const mode = btn.getAttribute("data-mode");
+    if (mode === "cards") {
+      showScreen("cards");
+    } else if (mode === "typing") {
+      toggleTypingMode();
+      showScreen("cards");
+    } else if (mode === "test") {
+      showScreen("test");
+    } else if (mode === "presentation") {
+      showScreen("presentation");
+    }
+  });
+});
+
+// ========== КНОПКИ НАЗАД ==========
+document.querySelectorAll("[data-back]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (presentationModeActive) {
+      exitPresentation();
+    }
+    showScreen("dashboard");
+  });
+});
+
+// ========== EVENTS ==========
+loadBtn.onclick = loadWords;
+repeatUnknownBtn.onclick = repeatUnknownWords;
+randomWordBtn.onclick = showRandomWord;
+toggleSoundBtn.onclick = toggleSound;
+
+showAnswerBtn.onclick = () => cardAnswer.classList.remove("hidden");
 prevBtn.onclick = showPrevCard;
 nextBtn.onclick = showNextCard;
-
 knowBtn.onclick = () => markWord("known");
 dontKnowBtn.onclick = () => markWord("unknown");
 
-repeatUnknownBtn.onclick = repeatUnknownWords;
-showAllBtn.onclick = showAllWords;
-randomWordBtn.onclick = showRandomWord;
-
-searchBtn.onclick = searchWords;
-resetSearchBtn.onclick = resetSearch;
-
-cardModeSelect.onchange = () => {
-  cardMode = cardModeSelect.value;
+cardsModeSelect.onclick = () => {
+  if (cardMode === "de-to-ru") {
+    cardMode = "ru-to-de";
+    cardsModeSelect.textContent = "RU → DE";
+  } else {
+    cardMode = "de-to-ru";
+    cardsModeSelect.textContent = "DE → RU";
+  }
   showCard();
 };
 
-typingModeBtn.onclick = toggleTypingMode;
-checkTypingBtn.onclick = checkTypingAnswer;
-
-typingInput.onkeypress = (e) => {
-  if (e.key === "Enter") {
-    checkTypingAnswer();
-  }
+cardsTypingModeBtn.onclick = toggleTypingMode;
+cardsCheckTypingBtn.onclick = checkTypingAnswer;
+cardsTypingInput.onkeypress = (e) => {
+  if (e.key === "Enter") checkTypingAnswer();
 };
+cardsSpeakBtn.onclick = speakCardWord;
 
-presentationModeBtn.onclick = startPresentationMode;
-presentationExitBtn.onclick = exitPresentation;
-presentationPauseBtn.onclick = pausePresentation;
-presentationStopBtn.onclick = stopPresentation;
-toggleSidebarBtn.onclick = toggleSidebar;
-
-cardsModeBtn.onclick = switchToCards;
-testModeBtn.onclick = switchToTest;
-
+testSpeakBtn.onclick = speakTestWord;
 nextQuestionBtn.onclick = nextTestQuestion;
 restartTestBtn.onclick = restartTest;
 
-// Аудио кнопки
-if (speakCardBtn) speakCardBtn.onclick = speakCardWord;
-if (speakPresentationBtn) speakPresentationBtn.onclick = speakPresentationWord;
-if (speakTestBtn) speakTestBtn.onclick = speakTestWord;
-if (toggleSoundBtn) toggleSoundBtn.onclick = toggleSound;
+presentationPauseBtn.onclick = pausePresentation;
+presentationSpeakBtn.onclick = speakPresentationWord;
+toggleSidebarBtn.onclick = toggleSidebar;
 
-loadWords();
+// ========== ИНИЦИАЛИЗАЦИЯ ==========
+// Устанавливаем активный день по умолчанию
+document.querySelector('.day-btn[data-day="tag1"]').classList.add("active");
+currentDayName.textContent = "Tag 1";
+updateDashboardStats();
+showScreen("dashboard");
