@@ -12,12 +12,6 @@
     "example_ru": "Моя новая деятельность очень похожа на предыдущую."
   },
   {
-    "word": "antworten",
-    "translation": "отвечать",
-    "example_de": "Bitte antworten Sie mir so schnell wie möglich.",
-    "example_ru": "Пожалуйста, ответьте мне как можно скорее."
-  },
-  {
     "word": "auffallen",
     "translation": "бросаться в глаза",
     "example_de": "Mir fällt auf, dass Herr Geiger in letzter Zeit viel fröhlicher wirkt.",
@@ -48,12 +42,6 @@
     "example_ru": "Вы можете вступить в наш спортивный клуб без вступительного взноса."
   },
   {
-    "word": "danken",
-    "translation": "благодарить",
-    "example_de": "Ich danke Ihnen sehr. Sie haben mir sehr geholfen.",
-    "example_ru": "Я вам очень благодарен. Вы мне очень помогли."
-  },
-  {
     "word": "dienen",
     "translation": "служить",
     "example_de": "Das Treffen dient dem gegenseitigen Kennenlernen.",
@@ -78,34 +66,10 @@
     "example_ru": "Мне тебя очень не хватает!"
   },
   {
-    "word": "folgen",
-    "translation": "следовать",
-    "example_de": "Bitte folgen Sie mir.",
-    "example_ru": "Пожалуйста, следуйте за мной."
-  },
-  {
-    "word": "gefallen",
-    "translation": "нравиться",
-    "example_de": "Ihre Projektskizze gefällt mir sehr gut.",
-    "example_ru": "Ваш проект мне очень нравится."
-  },
-  {
-    "word": "gehören",
-    "translation": "принадлежать",
-    "example_de": "Die Jacke gehört mir.",
-    "example_ru": "Куртка принадлежит мне."
-  },
-  {
     "word": "gelingen",
     "translation": "удаваться",
     "example_de": "Dieser Kuchen gelingt mir immer besonders gut.",
     "example_ru": "Этот пирог у меня всегда особенно хорошо получается."
-  },
-  {
-    "word": "helfen",
-    "translation": "помогать",
-    "example_de": "Ich helfe dir gerne bei den Vorbereitungen.",
-    "example_ru": "Я с удовольствием помогу тебе с подготовкой."
   },
   {
     "word": "leichtfallen",
@@ -132,12 +96,6 @@
     "example_ru": "Эта информация мне очень полезна."
   },
   {
-    "word": "passen",
-    "translation": "подходить",
-    "example_de": "Der Anzug passt Ihnen perfekt.",
-    "example_ru": "Костюм вам идеально подходит."
-  },
-  {
     "word": "schaden",
     "translation": "вредить",
     "example_de": "Ein bisschen mehr Sport würde dir nicht schaden.",
@@ -145,7 +103,7 @@
   },
   {
     "word": "schmecken",
-    "translation": "быть на вкус",
+    "translation": "пробовать, вкус, иметь вкус, понравиться вкус",
     "example_de": "Schmeckt Ihnen die Suppe nicht?",
     "example_ru": "Вам не нравится суп?"
   },

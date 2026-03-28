@@ -67,7 +67,7 @@ const presentationStopBtn = document.getElementById("presentationStopBtn");
 const presentationSidebar = document.getElementById("presentationSidebar");
 const toggleSidebarBtn = document.getElementById("toggleSidebarBtn");
 const wordsListContainer = document.getElementById("wordsList");
-const presentationContent = document.getElementById("presentationContent");
+const presentationMain = document.getElementById("presentationMain");
 
 // Элементы аудио
 const speakCardBtn = document.getElementById("speakCardBtn");
@@ -419,16 +419,19 @@ function toggleSound() {
 
 /* БОКОВАЯ ПАНЕЛЬ ПРЕЗЕНТАЦИИ */
 function toggleSidebar() {
+  if (!presentationSidebar || !presentationMain) return;
+  
   presentationSidebar.classList.toggle("collapsed");
   const btn = toggleSidebarBtn;
+  
   if (presentationSidebar.classList.contains("collapsed")) {
     btn.textContent = "▶";
     btn.title = "Показать панель";
-    presentationContent.classList.remove("with-sidebar");
+    presentationMain.classList.remove("with-sidebar");
   } else {
     btn.textContent = "◀";
     btn.title = "Скрыть панель";
-    presentationContent.classList.add("with-sidebar");
+    presentationMain.classList.add("with-sidebar");
   }
 }
 
@@ -454,9 +457,11 @@ function updateWordsList() {
     
     wordItem.onclick = () => {
       if (presentationModeActive && !presentationPaused) {
-        presentationCurrentIndex = index;
+        // Очищаем таймеры перед переходом
         if (presentationTimer) clearTimeout(presentationTimer);
         if (presentationAnimationFrame) cancelAnimationFrame(presentationAnimationFrame);
+        
+        presentationCurrentIndex = index;
         showPresentationSlide();
       }
     };
@@ -493,15 +498,25 @@ function startPresentationMode() {
   
   presentationPauseBtn.textContent = "⏸ Пауза";
   
-  // Показываем боковую панель и обновляем список
+  // Сбрасываем состояние боковой панели
+  if (presentationSidebar && presentationMain) {
+    // Проверяем, была ли панель скрыта
+    if (!presentationSidebar.classList.contains("collapsed")) {
+      presentationMain.classList.add("with-sidebar");
+    } else {
+      presentationMain.classList.remove("with-sidebar");
+    }
+  }
+  
+  // Обновляем список слов
   updateWordsList();
-  presentationContent.classList.add("with-sidebar");
   
   showPresentationSlide();
 }
 
 function showPresentationSlide() {
   if (presentationCurrentIndex >= presentationWordsList.length) {
+    // Презентация завершена, начинаем сначала или останавливаемся
     presentationCurrentIndex = 0;
     updateWordsList();
   }
@@ -510,8 +525,12 @@ function showPresentationSlide() {
   
   presentationCounter.textContent = `${presentationCurrentIndex + 1} / ${presentationWordsList.length}`;
   
+  // Сброс анимаций
   presentationTranslation.style.opacity = "0";
   presentationExamples.style.opacity = "0";
+  presentationTranslation.textContent = "";
+  presentationExampleDe.textContent = "";
+  presentationExampleRu.textContent = "";
   
   presentationWord.textContent = word.word;
   presentationWord.style.opacity = "1";
@@ -519,14 +538,17 @@ function showPresentationSlide() {
   // Обновляем список слов с подсветкой текущего
   updateWordsList();
   
+  // Запускаем прогресс-бар
   startProgressBar();
   
+  // Озвучивание слова
   setTimeout(() => {
     if (presentationModeActive && !presentationPaused) {
       speakText(word.word, 'de-DE');
     }
   }, 500);
   
+  // Показ перевода
   setTimeout(() => {
     if (presentationModeActive && !presentationPaused && presentationCurrentIndex < presentationWordsList.length) {
       presentationTranslation.textContent = word.translation;
@@ -534,6 +556,7 @@ function showPresentationSlide() {
     }
   }, 1000);
   
+  // Показ примеров
   setTimeout(() => {
     if (presentationModeActive && !presentationPaused && presentationCurrentIndex < presentationWordsList.length) {
       presentationExampleDe.textContent = word.example_de;
@@ -542,8 +565,10 @@ function showPresentationSlide() {
     }
   }, 2000);
   
+  // Очищаем предыдущий таймер
   if (presentationTimer) clearTimeout(presentationTimer);
   
+  // Устанавливаем таймер для следующего слова
   presentationTimer = setTimeout(() => {
     if (presentationModeActive && !presentationPaused) {
       presentationCurrentIndex++;
@@ -556,8 +581,18 @@ function startProgressBar() {
   let startTime = Date.now();
   const duration = presentationInterval;
   
+  // Очищаем предыдущую анимацию
+  if (presentationAnimationFrame) {
+    cancelAnimationFrame(presentationAnimationFrame);
+    presentationAnimationFrame = null;
+  }
+  
   function updateProgress() {
-    if (!presentationModeActive || presentationPaused) return;
+    if (!presentationModeActive || presentationPaused) {
+      // Если на паузе, продолжаем запрашивать кадры, но не обновляем прогресс
+      presentationAnimationFrame = requestAnimationFrame(updateProgress);
+      return;
+    }
     
     const elapsed = Date.now() - startTime;
     const percent = Math.min((elapsed / duration) * 100, 100);
@@ -565,11 +600,12 @@ function startProgressBar() {
     
     if (percent < 100) {
       presentationAnimationFrame = requestAnimationFrame(updateProgress);
+    } else {
+      presentationAnimationFrame = null;
     }
   }
   
-  if (presentationAnimationFrame) cancelAnimationFrame(presentationAnimationFrame);
-  updateProgress();
+  presentationAnimationFrame = requestAnimationFrame(updateProgress);
 }
 
 function pausePresentation() {
@@ -579,17 +615,55 @@ function pausePresentation() {
   
   if (presentationPaused) {
     presentationPauseBtn.textContent = "▶ Старт";
-    if (presentationTimer) clearTimeout(presentationTimer);
-    if (presentationAnimationFrame) cancelAnimationFrame(presentationAnimationFrame);
+    if (presentationTimer) {
+      clearTimeout(presentationTimer);
+      presentationTimer = null;
+    }
+    // Анимация прогресс-бара останавливается, но requestAnimationFrame продолжает работать
+    // с проверкой presentationPaused, поэтому прогресс не обновляется
   } else {
     presentationPauseBtn.textContent = "⏸ Пауза";
-    startProgressBar();
+    
+    // Вычисляем оставшееся время на основе текущей ширины прогресс-бара
+    const currentWidth = parseFloat(presentationProgressBar.style.width) || 0;
+    const remainingPercent = 100 - currentWidth;
+    const remainingTime = (remainingPercent / 100) * presentationInterval;
+    
+    // Перезапускаем прогресс-бар с оставшегося времени
+    const startTime = Date.now();
+    const duration = remainingTime;
+    
+    if (presentationAnimationFrame) {
+      cancelAnimationFrame(presentationAnimationFrame);
+    }
+    
+    function resumeProgress() {
+      if (!presentationModeActive || presentationPaused) {
+        presentationAnimationFrame = requestAnimationFrame(resumeProgress);
+        return;
+      }
+      
+      const elapsed = Date.now() - startTime;
+      const percent = Math.min((elapsed / duration) * 100, 100);
+      const newWidth = currentWidth + percent;
+      presentationProgressBar.style.width = `${Math.min(newWidth, 100)}%`;
+      
+      if (percent < 100) {
+        presentationAnimationFrame = requestAnimationFrame(resumeProgress);
+      } else {
+        presentationAnimationFrame = null;
+      }
+    }
+    
+    presentationAnimationFrame = requestAnimationFrame(resumeProgress);
+    
+    // Перезапускаем таймер
     presentationTimer = setTimeout(() => {
       if (presentationModeActive && !presentationPaused) {
         presentationCurrentIndex++;
         showPresentationSlide();
       }
-    }, presentationInterval);
+    }, remainingTime);
   }
 }
 
@@ -597,16 +671,37 @@ function stopPresentation() {
   if (!presentationModeActive) return;
   
   if (confirm("Остановить презентацию и вернуться к карточкам?")) {
-    if (presentationTimer) clearTimeout(presentationTimer);
-    if (presentationAnimationFrame) cancelAnimationFrame(presentationAnimationFrame);
+    // Очищаем все таймеры
+    if (presentationTimer) {
+      clearTimeout(presentationTimer);
+      presentationTimer = null;
+    }
+    if (presentationAnimationFrame) {
+      cancelAnimationFrame(presentationAnimationFrame);
+      presentationAnimationFrame = null;
+    }
+    
     presentationModeActive = false;
     switchToCards();
   }
 }
 
 function exitPresentation() {
-  if (presentationTimer) clearTimeout(presentationTimer);
-  if (presentationAnimationFrame) cancelAnimationFrame(presentationAnimationFrame);
+  // Очищаем все таймеры
+  if (presentationTimer) {
+    clearTimeout(presentationTimer);
+    presentationTimer = null;
+  }
+  if (presentationAnimationFrame) {
+    cancelAnimationFrame(presentationAnimationFrame);
+    presentationAnimationFrame = null;
+  }
+  
+  // Сбрасываем состояние боковой панели
+  if (presentationMain) {
+    presentationMain.classList.remove("with-sidebar");
+  }
+  
   presentationModeActive = false;
   switchToCards();
 }
